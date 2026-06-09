@@ -122,3 +122,45 @@ Deno.serve(async (req) => {
 npm run build
 # Результат в ./dist — можно деплоить на Vercel, Netlify, любой статик-хостинг
 ```
+
+---
+
+## Деплой на Vercel
+
+> ⚠️ Главное: `.env` намеренно в `.gitignore` и **не попадает в репозиторий**.
+> Поэтому переменные нужно задать в самом Vercel, иначе сборка возьмёт
+> заглушку `placeholder.supabase.co` и логин упадёт с `Failed to fetch`.
+
+### 1. Переменные окружения
+
+**Vercel → Project → Settings → Environment Variables** — добавьте обе
+(окружения Production + Preview + Development):
+
+| Name | Value |
+|------|-------|
+| `VITE_SUPABASE_URL`      | `https://<project-id>.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | `anon public` ключ (Settings → API) |
+
+Vite вшивает `VITE_*` переменные **на этапе сборки**, не в рантайме — после
+их изменения **обязательна пересборка**: Deployments → ⋯ → **Redeploy**
+(или любой `git push`).
+
+### 2. URL Configuration в Supabase
+
+Чтобы работали редиректы и OAuth, добавьте адрес деплоя:
+
+**Supabase → Authentication → URL Configuration**
+- **Site URL:** `https://<project>.vercel.app`
+- **Redirect URLs:** `https://<project>.vercel.app/**`
+
+### 3. Deployment Protection (опционально)
+
+По умолчанию превью-деплои Vercel закрыты авторизацией (анонимно отдают `401`).
+Для публичной демки: **Settings → Deployment Protection → Disable**.
+
+### Если логин падает с `Failed to fetch`
+
+Почти всегда — не заданы env-переменные. Проверка: DevTools → **Network** →
+нажать «Войти» → у упавшего запроса посмотреть **Request URL**:
+- `placeholder.supabase.co` → переменные не заданы (см. шаг 1 + Redeploy)
+- `<project-id>.supabase.co` → причина другая
