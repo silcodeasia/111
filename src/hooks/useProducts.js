@@ -53,9 +53,13 @@ export function useProducts() {
   }
 
   const update = async (id, values) => {
+    // id — generated always as identity, его НЕЛЬЗЯ передавать в UPDATE
+    // (Postgres: "column id can only be updated to DEFAULT").
+    // created_at тоже не трогаем, updated_at выставит триггер set_updated_at.
+    const { id: _id, created_at: _createdAt, updated_at: _updatedAt, ...patch } = values
     const { data, error } = await supabase
       .from('products')
-      .update({ ...values, updated_at: new Date().toISOString() })
+      .update(patch)
       .eq('id', id)
       .select()
       .single()
