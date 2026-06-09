@@ -1,24 +1,31 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Box, CircularProgress } from '@mui/material'
 import { useAuth } from './context/AuthContext'
 import AppLayout from './components/AppLayout'
-import LoginPage from './pages/LoginPage'
-import DashboardPage from './pages/DashboardPage'
-import ProductsPage from './pages/ProductsPage'
-import ProductFormPage from './pages/ProductFormPage'
-import UsersPage from './pages/UsersPage'
-import { Box, CircularProgress } from '@mui/material'
+
+// Страницы грузятся лениво — каждая попадает в свой чанк и подтягивается
+// только при переходе на маршрут (особенно важно для ProductsPage с DataGrid).
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const ProductsPage = lazy(() => import('./pages/ProductsPage'))
+const ProductFormPage = lazy(() => import('./pages/ProductFormPage'))
+const UsersPage = lazy(() => import('./pages/UsersPage'))
+
+/** Центрированный спиннер — общий фолбэк для загрузки */
+function FullscreenLoader() {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <CircularProgress sx={{ color: 'primary.main' }} />
+    </Box>
+  )
+}
 
 /** Маршрут, требующий аутентификации */
 function PrivateRoute({ children }) {
   const { session, loading } = useAuth()
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', bgcolor: 'background.default' }}>
-        <CircularProgress sx={{ color: 'primary.main' }} />
-      </Box>
-    )
-  }
+  if (loading) return <FullscreenLoader />
 
   if (!session) return <Navigate to="/login" replace />
 
@@ -28,17 +35,19 @@ function PrivateRoute({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
+      <Suspense fallback={<FullscreenLoader />}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
 
-        <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-        <Route path="/products" element={<PrivateRoute><ProductsPage /></PrivateRoute>} />
-        <Route path="/products/new" element={<PrivateRoute><ProductFormPage /></PrivateRoute>} />
-        <Route path="/products/:id/edit" element={<PrivateRoute><ProductFormPage /></PrivateRoute>} />
-        <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
+          <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+          <Route path="/products" element={<PrivateRoute><ProductsPage /></PrivateRoute>} />
+          <Route path="/products/new" element={<PrivateRoute><ProductFormPage /></PrivateRoute>} />
+          <Route path="/products/:id/edit" element={<PrivateRoute><ProductFormPage /></PrivateRoute>} />
+          <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

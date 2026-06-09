@@ -42,9 +42,11 @@ export function useProducts() {
   useEffect(() => { fetch() }, [fetch])
 
   const create = async (values) => {
+    // updated_at/created_at проставит БД (default now() + триггер set_updated_at)
+    const { id: _id, created_at: _createdAt, updated_at: _updatedAt, ...payload } = values
     const { data, error } = await supabase
       .from('products')
-      .insert([{ ...values, updated_at: new Date().toISOString() }])
+      .insert([payload])
       .select()
       .single()
     if (error) throw error
@@ -86,5 +88,7 @@ export function useProducts() {
     }
   }
 
-  return { rows, loading, error, refetch: fetch, create, update, remove, processRowUpdate }
+  const clearError = useCallback(() => setError(null), [])
+
+  return { rows, loading, error, clearError, refetch: fetch, create, update, remove, processRowUpdate }
 }

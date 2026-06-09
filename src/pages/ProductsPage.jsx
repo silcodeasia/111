@@ -64,7 +64,7 @@ function Toolbar({ onAdd, canCreate, onRefresh }) {
 export default function ProductsPage() {
   const navigate = useNavigate()
   const { role } = useAuth()
-  const { rows, loading, error, refetch, remove, processRowUpdate } = useProducts()
+  const { rows, loading, error, clearError, refetch, remove, processRowUpdate } = useProducts()
 
   const [deleteId, setDeleteId] = useState(null)
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
@@ -251,7 +251,7 @@ export default function ProductsPage() {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => {}}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={clearError}>
           {error}
         </Alert>
       )}
