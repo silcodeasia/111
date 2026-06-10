@@ -1,55 +1,49 @@
 /**
  * RBAC — единая точка истины для прав доступа во фронтенде.
  *
- * Роль хранится в таблице profiles.role (см. supabase_migration.sql) и
- * подгружается в AuthContext. Это же значение использует RLS на стороне БД
- * через SECURITY DEFINER-функцию current_user_role(), поэтому источник
- * истины один и тот же для UI и для Postgres.
- *
- * RLS-политики (выдержка из миграции):
- *   -- SELECT — все аутентифицированные
- *   create policy "products: read for authenticated" on products
- *     for select to authenticated using (true);
- *
- *   -- INSERT/UPDATE — editor и admin
- *   create policy "products: write for editor+" on products
- *     for insert to authenticated
- *     with check (current_user_role() in ('editor','admin'));
- *
- *   -- DELETE — только admin
- *   create policy "products: delete for admin" on products
- *     for delete to authenticated using (current_user_role() = 'admin');
+ * Роль хранится в profiles.role и подгружается в AuthContext; то же значение
+ * использует RLS на стороне БД (current_user_role / is_admin /
+ * user_can_access_store). Скоуп по магазинам/регионам — в таблицах
+ * user_stores / user_regions (см. supabase_hr_schema.sql), на клиенте
+ * доступен через useAuth().storeIds / regionIds.
  */
 
 export const ROLES = {
   ADMIN: 'admin',
   EDITOR: 'editor',
   VIEWER: 'viewer',
+  DIRECTOR: 'director',
+  RM: 'rm',
+  HR: 'hr',
+}
+
+// Полный набор прав с дефолтом false — чтобы новые ключи не «протекали».
+const NONE = {
+  // products (демо)
+  canCreate: false,
+  canEdit: false,
+  canDelete: false,
+  canManageUsers: false,
+  canViewAdminFields: false,
+  // HR / вакансии
+  canViewStores: false,      // раздел «Магазины» (вакансии по магазину)
+  canEditVacancies: false,   // редактирование вакансий
+  canViewPlan: false,        // сводный «План»
+  canViewRegion: false,      // раздел «РМ» (магазины региона)
+  canManageHr: false,        // раздел «HR» (назначения)
 }
 
 /** Что умеет каждая роль */
 export const PERMISSIONS = {
   [ROLES.ADMIN]: {
-    canCreate: true,
-    canEdit: true,
-    canDelete: true,
-    canManageUsers: true,
-    canViewAdminFields: true,
+    canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canViewAdminFields: true,
+    canViewStores: true, canEditVacancies: true, canViewPlan: true, canViewRegion: true, canManageHr: true,
   },
-  [ROLES.EDITOR]: {
-    canCreate: true,
-    canEdit: true,
-    canDelete: false,
-    canManageUsers: false,
-    canViewAdminFields: false,
-  },
-  [ROLES.VIEWER]: {
-    canCreate: false,
-    canEdit: false,
-    canDelete: false,
-    canManageUsers: false,
-    canViewAdminFields: false,
-  },
+  [ROLES.EDITOR]: { ...NONE, canCreate: true, canEdit: true },
+  [ROLES.VIEWER]: { ...NONE },
+  [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true },
+  [ROLES.RM]: { ...NONE, canViewRegion: true },
+  [ROLES.HR]: { ...NONE, canViewStores: true, canManageHr: true },
 }
 
 /** Хук-помощник: can(role, 'canEdit') */
@@ -58,7 +52,10 @@ export function can(role, permission) {
 }
 
 export const ROLE_META = {
-  [ROLES.ADMIN]: { label: 'Admin', color: 'warning', icon: 'Crown' },
-  [ROLES.EDITOR]: { label: 'Editor', color: 'info', icon: 'Edit' },
-  [ROLES.VIEWER]: { label: 'Viewer', color: 'default', icon: 'Visibility' },
+  [ROLES.ADMIN]: { label: 'Admin', color: 'warning' },
+  [ROLES.EDITOR]: { label: 'Editor', color: 'info' },
+  [ROLES.VIEWER]: { label: 'Viewer', color: 'default' },
+  [ROLES.DIRECTOR]: { label: 'Директор', color: 'success' },
+  [ROLES.RM]: { label: 'РМ', color: 'primary' },
+  [ROLES.HR]: { label: 'HR', color: 'secondary' },
 }

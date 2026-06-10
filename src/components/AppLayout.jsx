@@ -9,6 +9,10 @@ import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline'
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
+import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
 import CircleIcon from '@mui/icons-material/Circle'
 import { useAuth } from '../context/AuthContext'
@@ -18,6 +22,10 @@ const DRAWER_WIDTH = 224
 
 const NAV_ITEMS = [
   { label: 'Панель', icon: DashboardOutlinedIcon, path: '/', permission: null },
+  { label: 'Магазины', icon: StorefrontOutlinedIcon, path: '/stores', permission: 'canViewStores' },
+  { label: 'План', icon: AssessmentOutlinedIcon, path: '/plan', permission: 'canViewPlan' },
+  { label: 'РМ · регион', icon: MapOutlinedIcon, path: '/rm', permission: 'canViewRegion' },
+  { label: 'HR', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
   { label: 'Товары', icon: TableChartOutlinedIcon, path: '/products', permission: null },
   { label: 'Добавить товар', icon: AddCircleOutlineIcon, path: '/products/new', permission: 'canCreate' },
   { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canManageUsers' },
@@ -117,7 +125,7 @@ export default function AppLayout({ children }) {
           >
             Навигация
           </Typography>
-          {NAV_ITEMS.map(item => (
+          {NAV_ITEMS.filter(item => !item.permission || can(role, item.permission)).map(item => (
             <NavItem key={item.path} item={item} role={role} />
           ))}
         </List>

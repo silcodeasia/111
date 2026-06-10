@@ -7,6 +7,8 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [role, setRole] = useState(ROLES.VIEWER)
+  const [storeIds, setStoreIds] = useState([])   // скоуп директора (user_stores)
+  const [regionIds, setRegionIds] = useState([]) // скоуп РМ (user_regions)
   const [authResolved, setAuthResolved] = useState(false)
   const [roleLoading, setRoleLoading] = useState(true)
 
@@ -29,28 +31,30 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  // 2. Единый источник истины для роли — таблица profiles.
-  //    Перечитываем при смене пользователя.
+  // 2. Роль (profiles) + скоуп (user_stores / user_regions). Перечитываем при смене юзера.
   useEffect(() => {
     const userId = session?.user?.id
     if (!userId) {
       setRole(ROLES.VIEWER)
+      setStoreIds([])
+      setRegionIds([])
       setRoleLoading(false)
       return
     }
 
     let active = true
     setRoleLoading(true)
-    supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single()
-      .then(({ data }) => {
-        if (!active) return
-        setRole(data?.role ?? ROLES.VIEWER)
-        setRoleLoading(false)
-      })
+    Promise.all([
+      supabase.from('profiles').select('role').eq('id', userId).single(),
+      supabase.from('user_stores').select('store_id').eq('user_id', userId),
+      supabase.from('user_regions').select('region_id').eq('user_id', userId),
+    ]).then(([roleRes, storesRes, regionsRes]) => {
+      if (!active) return
+      setRole(roleRes.data?.role ?? ROLES.VIEWER)
+      setStoreIds((storesRes.data ?? []).map(r => r.store_id))
+      setRegionIds((regionsRes.data ?? []).map(r => r.region_id))
+      setRoleLoading(false)
+    })
 
     return () => { active = false }
   }, [session?.user?.id])
@@ -73,7 +77,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, loading, role, signIn, signInWithGitHub, signOut }}>
+    <AuthContext.Provider value={{ session, loading, role, storeIds, regionIds, signIn, signInWithGitHub, signOut }}>
       {children}
     </AuthContext.Provider>
   )
