@@ -10,6 +10,13 @@ dist-ssr/
 .env.local
 .env.*.local
 
+# исходные данные с ПДн — не коммитить в репозиторий
+*.xlsx
+*.xls
+*.csv
+_scratch_*
+_data/
+
 # logs
 *.log
 npm-debug.log*
