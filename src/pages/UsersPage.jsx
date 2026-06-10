@@ -1,19 +1,103 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box, Paper, Typography, Chip, IconButton, Tooltip,
   MenuItem, Select, FormControl, Alert, Snackbar, Avatar,
+  Dialog, DialogTitle, DialogContent, DialogActions, Button,
+  Autocomplete, TextField, CircularProgress,
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline'
-import { useAuth } from '../context/AuthContext'
+import TuneIcon from '@mui/icons-material/Tune'
 import { ROLES, ROLE_META } from '../lib/rbac'
 import { useUsers } from '../hooks/useUsers'
+import { useStores } from '../hooks/useStores'
 import RoleGuard from '../components/RoleGuard'
 
+/** Диалог назначения магазинов (director) / регионов (rm) пользователю */
+function AccessDialog({ user, stores, regions, api, onClose, onSaved, onError }) {
+  const [storeSel, setStoreSel] = useState([])
+  const [regionSel, setRegionSel] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const isDirector = user.role === ROLES.DIRECTOR
+  const isRm = user.role === ROLES.RM
+
+  useEffect(() => {
+    let active = true
+    api.getUserScope(user.id).then(({ storeIds, regionIds }) => {
+      if (!active) return
+      setStoreSel(stores.filter(s => storeIds.includes(s.id)))
+      setRegionSel(regions.filter(r => regionIds.includes(r.id)))
+      setLoading(false)
+    })
+    return () => { active = false }
+  }, [user.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      // синхронизируем оба набора по роли (неактуальный обнуляем)
+      await api.setUserStores(user.id, isDirector ? storeSel.map(s => s.id) : [])
+      await api.setUserRegions(user.id, isRm ? regionSel.map(r => r.id) : [])
+      onSaved('Доступ сохранён')
+      onClose()
+    } catch (err) {
+      onError(err.message ?? 'Ошибка сохранения доступа')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ fontSize: '1rem' }}>
+        Доступ · {user.email}
+        <Chip label={(ROLE_META[user.role] ?? ROLE_META.viewer).label} color={(ROLE_META[user.role] ?? ROLE_META.viewer).color} size="small" sx={{ ml: 1, height: 20 }} />
+      </DialogTitle>
+      <DialogContent>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress size={24} /></Box>
+        ) : isDirector ? (
+          <Autocomplete
+            multiple
+            options={stores}
+            value={storeSel}
+            onChange={(_, v) => setStoreSel(v)}
+            getOptionLabel={s => `${s.code ? s.code + ' · ' : ''}${s.name}`}
+            isOptionEqualToValue={(o, v) => o.id === v.id}
+            renderInput={params => <TextField {...params} label="Магазины директора" placeholder="Выберите магазины" sx={{ mt: 1 }} />}
+          />
+        ) : isRm ? (
+          <Autocomplete
+            multiple
+            options={regions}
+            value={regionSel}
+            onChange={(_, v) => setRegionSel(v)}
+            getOptionLabel={r => `${r.code}${r.name ? ' — ' + r.name : ''}`}
+            isOptionEqualToValue={(o, v) => o.id === v.id}
+            renderInput={params => <TextField {...params} label="Регионы РМ" placeholder="Выберите регионы" sx={{ mt: 1 }} />}
+          />
+        ) : (
+          <Alert severity="info" sx={{ mt: 1 }}>
+            Для роли «{(ROLE_META[user.role] ?? ROLE_META.viewer).label}» скоуп магазинов/регионов не требуется.
+            Назначьте роль <b>Директор</b> или <b>РМ</b>, чтобы задать доступ к магазинам.
+          </Alert>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 2.5, pb: 2 }}>
+        <Button onClick={onClose} variant="outlined" size="small">Отмена</Button>
+        <Button onClick={save} variant="contained" size="small" disabled={saving || loading || (!isDirector && !isRm)}>
+          {saving ? <CircularProgress size={16} /> : 'Сохранить'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
 export default function UsersPage() {
-  const { role: currentUserRole } = useAuth()
-  const { users, loading, error, updateRole } = useUsers()
+  const { users, loading, error, updateRole, getUserScope, setUserStores, setUserRegions } = useUsers()
+  const { stores, regions } = useStores()
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
+  const [accessUser, setAccessUser] = useState(null)
 
   const toast = (message, severity = 'success') => setSnack({ open: true, message, severity })
 
@@ -28,31 +112,12 @@ export default function UsersPage() {
 
   const columns = [
     {
-      field: 'id',
-      headerName: 'ID',
-      width: 80,
-      renderCell: ({ value }) => (
-        <Typography sx={{ fontFamily: 'monospace', fontSize: '0.72rem', color: 'text.disabled' }}>
-          {String(value).slice(0, 8)}…
-        </Typography>
-      ),
-    },
-    {
-      field: 'email',
-      headerName: 'Email',
-      flex: 1,
-      minWidth: 200,
+      field: 'email', headerName: 'Email', flex: 1, minWidth: 220,
       renderCell: ({ row }) => {
         const initials = (row.email ?? '??').slice(0, 2).toUpperCase()
         return (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-            <Avatar
-              sx={{
-                width: 28, height: 28, fontSize: 11, fontWeight: 600,
-                bgcolor: 'rgba(62,207,142,0.12)', color: 'primary.main',
-                border: '1px solid rgba(62,207,142,0.2)',
-              }}
-            >
+            <Avatar sx={{ width: 28, height: 28, fontSize: 11, fontWeight: 600, bgcolor: 'rgba(62,207,142,0.12)', color: 'primary.main', border: '1px solid rgba(62,207,142,0.2)' }}>
               {initials}
             </Avatar>
             <Typography sx={{ fontSize: '0.8125rem' }}>{row.email}</Typography>
@@ -60,46 +125,44 @@ export default function UsersPage() {
         )
       },
     },
+    { field: 'name', headerName: 'Имя', width: 150 },
     {
-      field: 'name',
-      headerName: 'Имя',
-      width: 160,
+      field: 'role', headerName: 'Роль', width: 170,
+      renderCell: ({ row }) => (
+        <FormControl size="small" variant="standard" sx={{ minWidth: 130 }}>
+          <Select
+            value={row.role ?? ROLES.VIEWER}
+            onChange={(e) => handleRoleChange(row.id, e.target.value)}
+            disableUnderline
+            sx={{ fontSize: '0.8rem' }}
+          >
+            {Object.entries(ROLE_META).map(([value, m]) => (
+              <MenuItem key={value} value={value}>
+                <Chip label={m.label} color={m.color} size="small" sx={{ height: 20, fontSize: '0.7rem', borderRadius: 1, pointerEvents: 'none' }} />
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      ),
     },
     {
-      field: 'role',
-      headerName: 'Роль',
-      width: 180,
+      field: 'access', headerName: 'Доступ', width: 110, sortable: false, filterable: false,
       renderCell: ({ row }) => {
-        const meta = ROLE_META[row.role] ?? ROLE_META.viewer
+        const scoped = row.role === ROLES.DIRECTOR || row.role === ROLES.RM
         return (
-          <FormControl size="small" variant="standard" sx={{ minWidth: 130 }}>
-            <Select
-              value={row.role ?? ROLES.VIEWER}
-              onChange={(e) => handleRoleChange(row.id, e.target.value)}
-              disableUnderline
-              sx={{ fontSize: '0.8rem' }}
-            >
-              {Object.entries(ROLE_META).map(([value, m]) => (
-                <MenuItem key={value} value={value}>
-                  <Chip
-                    label={m.label}
-                    color={m.color}
-                    size="small"
-                    sx={{ height: 20, fontSize: '0.7rem', borderRadius: 1, pointerEvents: 'none' }}
-                  />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Tooltip title={scoped ? 'Назначить магазины/регионы' : 'Доступен для ролей Директор / РМ'}>
+            <span>
+              <IconButton size="small" onClick={() => setAccessUser(row)} disabled={!scoped} sx={{ color: scoped ? 'primary.main' : 'text.disabled' }}>
+                <TuneIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
         )
       },
     },
     {
-      field: 'created_at',
-      headerName: 'Дата регистрации',
-      width: 160,
-      valueFormatter: (value) =>
-        value ? new Date(value).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+      field: 'created_at', headerName: 'Регистрация', width: 150,
+      valueFormatter: (value) => value ? new Date(value).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
     },
   ]
 
@@ -107,20 +170,15 @@ export default function UsersPage() {
     <RoleGuard permission="canManageUsers">
       <Box>
         <Box sx={{ mb: 2.5 }}>
-          <Typography variant="h5" sx={{ mb: 0.25 }}>Пользователи</Typography>
+          <Typography variant="h5" sx={{ mb: 0.25 }}>Пользователи и доступы</Typography>
           <Typography variant="body2" color="text.secondary">
-            Таблица <code style={{ fontSize: '0.75rem', color: '#3ECF8E' }}>profiles</code> · управление ролями
+            Роль определяет права; для <b>Директора</b> и <b>РМ</b> задайте магазины/регионы кнопкой <TuneIcon sx={{ fontSize: 14, verticalAlign: 'middle' }} />
           </Typography>
         </Box>
 
         {error && <Alert severity="warning" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>}
 
-        <Alert severity="info" sx={{ mb: 2, fontSize: '0.8rem' }}>
-          В продакшене смену ролей выполняйте через Supabase Edge Function с service_role ключом.
-          Прямое обновление <code>profiles.role</code> должно быть закрыто RLS для всех, кроме admin.
-        </Alert>
-
-        <Paper sx={{ height: 500 }}>
+        <Paper sx={{ height: 540 }}>
           <DataGrid
             rows={users}
             columns={columns}
@@ -132,15 +190,25 @@ export default function UsersPage() {
           />
         </Paper>
 
+        {accessUser && (
+          <AccessDialog
+            user={accessUser}
+            stores={stores}
+            regions={regions}
+            api={{ getUserScope, setUserStores, setUserRegions }}
+            onClose={() => setAccessUser(null)}
+            onSaved={(m) => toast(m)}
+            onError={(m) => toast(m, 'error')}
+          />
+        )}
+
         <Snackbar
           open={snack.open}
           autoHideDuration={3000}
           onClose={() => setSnack(s => ({ ...s, open: false }))}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         >
-          <Alert severity={snack.severity} sx={{ fontSize: '0.8rem' }}>
-            {snack.message}
-          </Alert>
+          <Alert severity={snack.severity} sx={{ fontSize: '0.8rem' }}>{snack.message}</Alert>
         </Snackbar>
       </Box>
     </RoleGuard>

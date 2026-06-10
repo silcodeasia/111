@@ -57,5 +57,39 @@ export function useUsers() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
   }
 
-  return { users, loading, error, refetch: fetch, updateRole }
+  // Текущий скоуп пользователя (для диалога назначений)
+  const getUserScope = async (userId) => {
+    const [s, r] = await Promise.all([
+      supabase.from('user_stores').select('store_id').eq('user_id', userId),
+      supabase.from('user_regions').select('region_id').eq('user_id', userId),
+    ])
+    return {
+      storeIds: (s.data ?? []).map(x => x.store_id),
+      regionIds: (r.data ?? []).map(x => x.region_id),
+    }
+  }
+
+  // Полная замена набора магазинов/регионов пользователя (delete-then-insert)
+  const setUserStores = async (userId, storeIds) => {
+    const del = await supabase.from('user_stores').delete().eq('user_id', userId)
+    if (del.error) throw del.error
+    if (storeIds.length) {
+      const { error } = await supabase
+        .from('user_stores')
+        .insert(storeIds.map(store_id => ({ user_id: userId, store_id })))
+      if (error) throw error
+    }
+  }
+  const setUserRegions = async (userId, regionIds) => {
+    const del = await supabase.from('user_regions').delete().eq('user_id', userId)
+    if (del.error) throw del.error
+    if (regionIds.length) {
+      const { error } = await supabase
+        .from('user_regions')
+        .insert(regionIds.map(region_id => ({ user_id: userId, region_id })))
+      if (error) throw error
+    }
+  }
+
+  return { users, loading, error, refetch: fetch, updateRole, getUserScope, setUserStores, setUserRegions }
 }

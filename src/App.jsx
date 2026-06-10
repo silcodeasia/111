@@ -5,11 +5,9 @@ import { useAuth } from './context/AuthContext'
 import AppLayout from './components/AppLayout'
 
 // Страницы грузятся лениво — каждая попадает в свой чанк и подтягивается
-// только при переходе на маршрут (особенно важно для ProductsPage с DataGrid).
+// только при переходе на маршрут (особенно важно для страниц с DataGrid).
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
-const ProductsPage = lazy(() => import('./pages/ProductsPage'))
-const ProductFormPage = lazy(() => import('./pages/ProductFormPage'))
 const UsersPage = lazy(() => import('./pages/UsersPage'))
 const StoresPage = lazy(() => import('./pages/StoresPage'))
 const PlanPage = lazy(() => import('./pages/PlanPage'))
@@ -44,9 +42,6 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
 
           <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-          <Route path="/products" element={<PrivateRoute><ProductsPage /></PrivateRoute>} />
-          <Route path="/products/new" element={<PrivateRoute><ProductFormPage /></PrivateRoute>} />
-          <Route path="/products/:id/edit" element={<PrivateRoute><ProductFormPage /></PrivateRoute>} />
           <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
           <Route path="/stores" element={<PrivateRoute><StoresPage /></PrivateRoute>} />
           <Route path="/plan" element={<PrivateRoute><PlanPage /></PrivateRoute>} />

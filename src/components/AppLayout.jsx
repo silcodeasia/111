@@ -6,8 +6,6 @@ import {
   AppBar, Toolbar,
 } from '@mui/material'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
-import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined'
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
@@ -26,8 +24,6 @@ const NAV_ITEMS = [
   { label: 'План', icon: AssessmentOutlinedIcon, path: '/plan', permission: 'canViewPlan' },
   { label: 'РМ · регион', icon: MapOutlinedIcon, path: '/rm', permission: 'canViewRegion' },
   { label: 'HR', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
-  { label: 'Товары', icon: TableChartOutlinedIcon, path: '/products', permission: null },
-  { label: 'Добавить товар', icon: AddCircleOutlineIcon, path: '/products/new', permission: 'canCreate' },
   { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canManageUsers' },
 ]
 
