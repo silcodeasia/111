@@ -54,9 +54,6 @@ export default function HrPage() {
           rows={rows}
           columns={columns}
           loading={loading}
-          hideFooter
-          pageSizeOptions={[1000]}
-          initialState={{ pagination: { paginationModel: { pageSize: 1000 } } }}
           disableRowSelectionOnClick
           slots={{
             noRowsOverlay: () => (

@@ -195,9 +195,6 @@ export default function StaffingPage() {
           loading={loading}
           processRowUpdate={handleRowUpdate}
           onProcessRowUpdateError={(err) => toast(err.message, 'error')}
-          hideFooter
-          pageSizeOptions={[1000]}
-          initialState={{ pagination: { paginationModel: { pageSize: 1000 } } }}
           disableRowSelectionOnClick
           slots={{ toolbar: Toolbar }}
           sx={{ border: 'none', '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 600 }, '& .MuiDataGrid-cell--editable': { color: 'primary.main' } }}
