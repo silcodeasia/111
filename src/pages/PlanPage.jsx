@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Box, Paper, Typography, Alert, Grid } from '@mui/material'
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
 import {
   DataGrid, GridToolbarContainer, GridToolbarQuickFilter, GridToolbarExport, GridToolbarColumnsButton,
+  useGridApiRef, gridFilteredSortedRowEntriesSelector,
 } from '@mui/x-data-grid'
 import { useStores } from '../hooks/useStores'
 import { useStaffing } from '../hooks/useStaffing'
@@ -19,9 +20,9 @@ const GRP = {
 
 function Stat({ label, value, color }) {
   return (
-    <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.02)' }}>
-      <Typography sx={{ fontSize: '0.7rem', fontFamily: 'monospace', color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</Typography>
-      <Typography sx={{ fontSize: '1.6rem', fontWeight: 600, mt: 0.25, color: color ?? 'text.primary' }}>{value}</Typography>
+    <Paper sx={{ p: 1.25, bgcolor: 'rgba(255,255,255,0.02)', textAlign: 'center' }}>
+      <Typography sx={{ fontSize: '0.64rem', fontFamily: 'monospace', color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{label}</Typography>
+      <Typography sx={{ fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.2, color: color ?? 'text.primary' }}>{value}</Typography>
     </Paper>
   )
 }
@@ -68,12 +69,43 @@ export default function PlanPage() {
     })
   }, [staffing, stores, planByStore])
 
+  // Отфильтрованные строки грида → виджеты пересчитываются по фильтру
+  const apiRef = useGridApiRef()
+  const [view, setView] = useState([])
+  useEffect(() => { setView(rows) }, [rows])
+  const syncView = useCallback(() => {
+    try { setView(gridFilteredSortedRowEntriesSelector(apiRef).map(e => e.model)) } catch { /* грид ещё не готов */ }
+  }, [apiRef])
+
+  // Итоги (строка 54 «Сводной») по отфильтрованным магазинам
   const totals = useMemo(() => {
-    const shtat = rows.reduce((s, r) => s + r.shtat, 0)
-    const itogo = rows.reduce((s, r) => s + r.itogo, 0)
-    const vsego = rows.reduce((s, r) => s + r.vsego, 0)
-    return { shtat: r1(shtat), itogo: r1(itogo), vsego: r1(vsego), ukompl: shtat > 0 ? Math.round(itogo / shtat * 100) : 0 }
-  }, [rows])
+    const ids = new Set(view.map(r => r.id))
+    const T = { shtat: 0, zup: 0, neof: 0, stazh: 0, fakt: 0, aup: 0, gruzchiki: 0, dopek: 0, lineyka: 0 }
+    const perStore = new Map()
+    for (const s of staffing) {
+      if (!ids.has(s.store_id)) continue
+      const zup = num(s.zup), neof = num(s.neof), stazh = num(s.stazhirovka), shtat = num(s.shtat)
+      const work = zup + neof + stazh
+      const fakt = Math.max(shtat - work, 0)
+      T.shtat += shtat; T.zup += zup; T.neof += neof; T.stazh += stazh; T.fakt += fakt
+      const c = (s.category || '').toLowerCase()
+      if (c.includes('ауп')) T.aup += fakt
+      else if (c.includes('грузч')) T.gruzchiki += fakt
+      else if (c.includes('допек') || c.includes('пекарн')) T.dopek += fakt
+      else if (c.includes('линейк')) T.lineyka += fakt
+      const ps = perStore.get(s.store_id) ?? { shtat: 0, work: 0 }
+      ps.shtat += shtat; ps.work += work; perStore.set(s.store_id, ps)
+    }
+    let sumU = 0, cnt = 0
+    for (const ps of perStore.values()) if (ps.shtat > 0) { sumU += ps.work / ps.shtat; cnt++ }
+    const ukompl = cnt ? sumU / cnt * 100 : 0
+    return {
+      shtat: r1(T.shtat), rabotaet: r1(T.zup + T.neof + T.stazh),
+      zup: r1(T.zup), neof: r1(T.neof), stazh: r1(T.stazh), fakt: r1(T.fakt),
+      aup: r1(T.aup), gruzchiki: r1(T.gruzchiki), dopek: r1(T.dopek), lineyka: r1(T.lineyka),
+      ukompl: Math.round(ukompl), nehvatka: Math.round(100 - ukompl), nStores: cnt,
+    }
+  }, [view, staffing])
 
   const n = (w = 80) => ({ type: 'number', width: w, headerAlign: 'center', align: 'center' })
   const pct = (field, headerName, colored = true) => ({
@@ -122,21 +154,33 @@ export default function PlanPage() {
         <AssessmentOutlinedIcon sx={{ color: 'primary.main' }} />
         <Box>
           <Typography variant="h5">Сводный план</Typography>
-          <Typography variant="body2" color="text.secondary">Укомплектованность по магазинам (из штатного расписания) · красным — ниже 90%</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Итоги по {totals.nStores} магазин{totals.nStores % 10 === 1 && totals.nStores % 100 !== 11 ? 'у' : 'ам'} · пересчитываются по фильтру таблицы
+          </Typography>
         </Box>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={6} md={3}><Stat label="Штат всего" value={totals.shtat} /></Grid>
-        <Grid item xs={6} md={3}><Stat label="Работает" value={totals.itogo} color="primary.main" /></Grid>
-        <Grid item xs={6} md={3}><Stat label="Всего вакансий" value={totals.vsego} color="warning.main" /></Grid>
-        <Grid item xs={6} md={3}><Stat label="Укомплектованность" value={`${totals.ukompl}%`} color={totals.ukompl < 90 ? 'error.main' : 'success.main'} /></Grid>
+      <Grid container spacing={1.5} sx={{ mb: 2 }}>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Штат" value={totals.shtat} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="ЗУП" value={totals.zup} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="НЕОФ" value={totals.neof} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="СТАЖ" value={totals.stazh} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Работает" value={totals.rabotaet} color="primary.main" /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Вакансий" value={totals.fakt} color="warning.main" /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="АУП" value={totals.aup} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Грузчики" value={totals.gruzchiki} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Допек" value={totals.dopek} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Линейка" value={totals.lineyka} /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Нехватка" value={`${totals.nehvatka}%`} color="error.main" /></Grid>
+        <Grid item xs={4} sm={3} md={2}><Stat label="Укомпл." value={`${totals.ukompl}%`} color={totals.ukompl < 90 ? 'error.main' : 'success.main'} /></Grid>
       </Grid>
 
       <Paper sx={{ height: 600 }}>
         <DataGrid
+          apiRef={apiRef}
+          onStateChange={syncView}
           rows={rows}
           columns={columns}
           columnGroupingModel={columnGroupingModel}

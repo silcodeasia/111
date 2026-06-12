@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText,
   Typography, Avatar, Chip, Divider, Tooltip, IconButton,
-  AppBar, Toolbar,
 } from '@mui/material'
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline'
@@ -191,12 +190,6 @@ export default function AppLayout({ children }) {
 
       {/* ── Main ── */}
       <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary' }}>
-          <Toolbar variant="dense" sx={{ minHeight: 52, gap: 1 }}>
-            <Box sx={{ flex: 1 }} />
-          </Toolbar>
-        </AppBar>
-
         <Box sx={{ flex: 1, p: 3, overflow: 'auto' }}>
           {children}
         </Box>
