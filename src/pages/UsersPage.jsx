@@ -29,7 +29,15 @@ function AddUserDialog({ onClose, onCreated, onError }) {
     setSaving(false)
     if (error) {
       let msg = error.message
-      try { const b = await error.context.json(); if (b?.error) msg = b.error } catch { /* ignore */ }
+      try {
+        const ctx = error.context
+        if (ctx && typeof ctx.text === 'function') {
+          const txt = await ctx.text()
+          let detail = txt
+          try { const b = JSON.parse(txt); if (b?.error) detail = b.error } catch { /* not json */ }
+          msg = `(${ctx.status ?? '?'}) ${detail || error.message}`
+        }
+      } catch { /* ignore */ }
       return onError(msg)
     }
     if (data?.error) return onError(data.error)
