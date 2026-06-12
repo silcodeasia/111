@@ -195,7 +195,9 @@ export default function PlanPage() {
           columns={columns}
           columnGroupingModel={columnGroupingModel}
           loading={sLoading || stLoading}
-          autoPageSize
+          hideFooter
+          pageSizeOptions={[1000]}
+          initialState={{ pagination: { paginationModel: { pageSize: 1000 } } }}
           disableRowSelectionOnClick
           slots={{ toolbar: Toolbar }}
           sx={{

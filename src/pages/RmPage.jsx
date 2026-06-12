@@ -162,7 +162,9 @@ export default function RmPage() {
           rows={gridRows}
           columns={columns}
           loading={sLoading || stLoading}
-          autoPageSize
+          hideFooter
+          pageSizeOptions={[1000]}
+          initialState={{ pagination: { paginationModel: { pageSize: 1000 } } }}
           disableRowSelectionOnClick
           sx={{ border: 'none' }}
         />

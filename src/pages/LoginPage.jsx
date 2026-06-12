@@ -2,14 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Box, Paper, Typography, TextField, Button,
-  Divider, Alert, CircularProgress,
+  Alert, CircularProgress,
 } from '@mui/material'
-import GitHubIcon from '@mui/icons-material/GitHub'
-import CircleIcon from '@mui/icons-material/Circle'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
-  const { signIn, signInWithGitHub } = useAuth()
+  const { signIn } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,13 +28,6 @@ export default function LoginPage() {
     }
   }
 
-  const handleGitHub = async () => {
-    try {
-      await signInWithGitHub()
-    } catch (err) {
-      setError(err.message)
-    }
-  }
 
   return (
     <Box
@@ -55,18 +46,12 @@ export default function LoginPage() {
           <Box
             sx={{
               width: 32, height: 32, borderRadius: 1.5,
-              bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              bgcolor: 'error.main', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#0F1117' }}>D</Typography>
+            <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Т</Typography>
           </Box>
-          <Box>
-            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>DataPanel</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CircleIcon sx={{ fontSize: 7, color: 'primary.main' }} />
-              <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>supabase · rbac</Typography>
-            </Box>
-          </Box>
+          <Typography sx={{ fontSize: 16, fontWeight: 600 }}>Toimart</Typography>
         </Box>
 
         <Typography variant="h5" sx={{ mb: 0.5, fontSize: '1.15rem' }}>Войти в систему</Typography>
@@ -110,22 +95,6 @@ export default function LoginPage() {
             {loading ? <CircularProgress size={18} sx={{ color: '#0F1117' }} /> : 'Войти'}
           </Button>
         </Box>
-
-        <Divider sx={{ my: 2.5, fontSize: '0.75rem', color: 'text.disabled' }}>или</Divider>
-
-        <Button
-          variant="outlined"
-          fullWidth
-          startIcon={<GitHubIcon />}
-          onClick={handleGitHub}
-          sx={{ py: 1, color: 'text.primary', borderColor: 'divider' }}
-        >
-          Войти через GitHub
-        </Button>
-
-        <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 2.5, textAlign: 'center' }}>
-          Роль назначается администратором в Supabase Dashboard
-        </Typography>
       </Paper>
     </Box>
   )

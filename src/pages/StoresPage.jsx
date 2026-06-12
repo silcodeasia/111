@@ -162,7 +162,9 @@ export default function StoresPage() {
           loading={loading || storesLoading}
           processRowUpdate={editable ? processRowUpdate : undefined}
           onProcessRowUpdateError={(err) => toast(err.message, 'error')}
-          autoPageSize
+          hideFooter
+          pageSizeOptions={[1000]}
+          initialState={{ pagination: { paginationModel: { pageSize: 1000 } } }}
           disableRowSelectionOnClick
           slots={{ toolbar: Toolbar }}
           sx={{
