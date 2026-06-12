@@ -21,11 +21,21 @@ create policy "staffing write" on staffing for all to authenticated
 create or replace function refresh_staffing_zup()
 returns void
 language sql security definer set search_path = public as $$
-  update staffing s set zup = coalesce((
-    select count(*) from report r
-    where r.store_id = s.store_id
-      and lower(btrim(r.dolzhnost)) = lower(btrim(s.position))
-  ), 0);
+  -- WHERE обязателен (Supabase блокирует UPDATE без условия); обновляем
+  -- только изменившиеся строки, остальным выставляем 0.
+  update staffing s
+  set zup = sub.cnt
+  from (
+    select st.id,
+           coalesce((
+             select count(*) from report r
+             where r.store_id = st.store_id
+               and lower(btrim(r.dolzhnost)) = lower(btrim(st.position))
+           ), 0) as cnt
+    from staffing st
+  ) sub
+  where s.id = sub.id
+    and s.zup is distinct from sub.cnt;
 $$;
 
 -- первичный пересчёт (если отчёт уже загружен)
