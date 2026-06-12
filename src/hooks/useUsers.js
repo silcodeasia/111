@@ -57,6 +57,20 @@ export function useUsers() {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
   }
 
+  const updateName = async (userId, name) => {
+    const value = (name ?? '').trim() || null
+    const { error } = await supabase.from('profiles').update({ name: value }).eq('id', userId)
+    if (error) throw error
+    // синхронизировать денормализованное ФИО, если юзер — ДМ/РМ (best-effort)
+    if (value) {
+      try {
+        await supabase.from('stores').update({ dm_name: value }).eq('director_id', userId)
+        await supabase.from('regions').update({ name: value }).eq('rm_id', userId)
+      } catch { /* нет прав/связей — не критично */ }
+    }
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, name: value } : u))
+  }
+
   // Текущий скоуп пользователя (для диалога назначений)
   const getUserScope = async (userId) => {
     const [s, r] = await Promise.all([
@@ -108,5 +122,5 @@ export function useUsers() {
     }
   }
 
-  return { users, loading, error, refetch: fetch, updateRole, getUserScope, setUserStores, setUserRegions }
+  return { users, loading, error, refetch: fetch, updateRole, updateName, getUserScope, setUserStores, setUserRegions }
 }

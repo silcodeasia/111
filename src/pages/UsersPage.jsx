@@ -145,7 +145,7 @@ function AccessDialog({ user, stores, regions, api, onClose, onSaved, onError })
 }
 
 export default function UsersPage() {
-  const { users, loading, error, updateRole, getUserScope, setUserStores, setUserRegions, refetch } = useUsers()
+  const { users, loading, error, updateRole, updateName, getUserScope, setUserStores, setUserRegions, refetch } = useUsers()
   const { stores, regions } = useStores()
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
   const [accessUser, setAccessUser] = useState(null)
@@ -160,6 +160,14 @@ export default function UsersPage() {
     } catch (err) {
       toast(err.message ?? 'Ошибка', 'error')
     }
+  }
+
+  const handleRowUpdate = async (newRow, oldRow) => {
+    if (newRow.name !== oldRow.name) {
+      try { await updateName(newRow.id, newRow.name); toast('ФИО обновлено') }
+      catch (err) { toast(err.message ?? 'Ошибка', 'error'); throw err }
+    }
+    return newRow
   }
 
   const columns = [
@@ -177,7 +185,7 @@ export default function UsersPage() {
         )
       },
     },
-    { field: 'name', headerName: 'Имя', width: 150 },
+    { field: 'name', headerName: 'ФИО', width: 200, editable: true },
     {
       field: 'role', headerName: 'Роль', width: 170,
       renderCell: ({ row }) => (
@@ -240,6 +248,8 @@ export default function UsersPage() {
             rows={users}
             columns={columns}
             loading={loading}
+            processRowUpdate={handleRowUpdate}
+            onProcessRowUpdateError={(err) => toast(err.message, 'error')}
             disableRowSelectionOnClick
             pageSizeOptions={[25, 50]}
             initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
