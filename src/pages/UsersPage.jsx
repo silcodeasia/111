@@ -7,10 +7,50 @@ import {
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
 import TuneIcon from '@mui/icons-material/Tune'
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
+import { supabase } from '../lib/supabase'
 import { ROLES, ROLE_META } from '../lib/rbac'
 import { useUsers } from '../hooks/useUsers'
 import { useStores } from '../hooks/useStores'
 import RoleGuard from '../components/RoleGuard'
+
+/** Диалог создания пользователя (через Edge Function admin-create-user) */
+function AddUserDialog({ onClose, onCreated, onError }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState('viewer')
+  const [saving, setSaving] = useState(false)
+  const save = async () => {
+    setSaving(true)
+    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+      body: { email: email.trim(), password, role },
+    })
+    setSaving(false)
+    if (error) {
+      let msg = error.message
+      try { const b = await error.context.json(); if (b?.error) msg = b.error } catch { /* ignore */ }
+      return onError(msg)
+    }
+    if (data?.error) return onError(data.error)
+    onCreated()
+  }
+  return (
+    <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ fontSize: '1rem' }}>Новый пользователь</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <TextField label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} fullWidth sx={{ mt: 1 }} autoComplete="off" />
+        <TextField label="Пароль" value={password} onChange={e => setPassword(e.target.value)} helperText="Минимум 6 символов" fullWidth autoComplete="new-password" />
+        <TextField label="Роль" value={role} onChange={e => setRole(e.target.value)} select fullWidth>
+          {Object.entries(ROLE_META).map(([v, m]) => <MenuItem key={v} value={v}>{m.label}</MenuItem>)}
+        </TextField>
+      </DialogContent>
+      <DialogActions sx={{ px: 2.5, pb: 2 }}>
+        <Button onClick={onClose} variant="outlined" size="small">Отмена</Button>
+        <Button onClick={save} variant="contained" size="small" disabled={saving || !email.trim() || password.length < 6}>Создать</Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
 
 /** Диалог назначения магазинов (director) / регионов (rm) пользователю */
 function AccessDialog({ user, stores, regions, api, onClose, onSaved, onError }) {
@@ -94,10 +134,11 @@ function AccessDialog({ user, stores, regions, api, onClose, onSaved, onError })
 }
 
 export default function UsersPage() {
-  const { users, loading, error, updateRole, getUserScope, setUserStores, setUserRegions } = useUsers()
+  const { users, loading, error, updateRole, getUserScope, setUserStores, setUserRegions, refetch } = useUsers()
   const { stores, regions } = useStores()
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
   const [accessUser, setAccessUser] = useState(null)
+  const [addOpen, setAddOpen] = useState(false)
 
   const toast = (message, severity = 'success') => setSnack({ open: true, message, severity })
 
@@ -169,11 +210,16 @@ export default function UsersPage() {
   return (
     <RoleGuard permission="canManageUsers">
       <Box>
-        <Box sx={{ mb: 2.5 }}>
-          <Typography variant="h5" sx={{ mb: 0.25 }}>Пользователи и доступы</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Роль определяет права; для <b>Директора</b> и <b>РМ</b> задайте магазины/регионы кнопкой <TuneIcon sx={{ fontSize: 14, verticalAlign: 'middle' }} />
-          </Typography>
+        <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h5" sx={{ mb: 0.25 }}>Пользователи и доступы</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Роль определяет права; для <b>Директора</b> и <b>РМ</b> задайте магазины/регионы кнопкой <TuneIcon sx={{ fontSize: 14, verticalAlign: 'middle' }} />
+            </Typography>
+          </Box>
+          <Button variant="contained" size="small" startIcon={<PersonAddAlt1Icon />} onClick={() => setAddOpen(true)}>
+            Пользователь
+          </Button>
         </Box>
 
         {error && <Alert severity="warning" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>}
@@ -189,6 +235,14 @@ export default function UsersPage() {
             sx={{ border: 'none' }}
           />
         </Paper>
+
+        {addOpen && (
+          <AddUserDialog
+            onClose={() => setAddOpen(false)}
+            onCreated={() => { setAddOpen(false); toast('Пользователь создан'); refetch() }}
+            onError={(m) => toast(m, 'error')}
+          />
+        )}
 
         {accessUser && (
           <AccessDialog
