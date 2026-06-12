@@ -11,6 +11,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const UsersPage = lazy(() => import('./pages/UsersPage'))
 const StoresPage = lazy(() => import('./pages/StoresPage'))
 const PlanPage = lazy(() => import('./pages/PlanPage'))
+const StaffingPage = lazy(() => import('./pages/StaffingPage'))
 const RmPage = lazy(() => import('./pages/RmPage'))
 const HrPage = lazy(() => import('./pages/HrPage'))
 
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
           <Route path="/stores" element={<PrivateRoute><StoresPage /></PrivateRoute>} />
           <Route path="/plan" element={<PrivateRoute><PlanPage /></PrivateRoute>} />
+          <Route path="/staffing" element={<PrivateRoute><StaffingPage /></PrivateRoute>} />
           <Route path="/rm" element={<PrivateRoute><RmPage /></PrivateRoute>} />
           <Route path="/hr" element={<PrivateRoute><HrPage /></PrivateRoute>} />
 

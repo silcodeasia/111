@@ -11,6 +11,7 @@ import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined'
+import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
 import CircleIcon from '@mui/icons-material/Circle'
 import PushPinIcon from '@mui/icons-material/PushPin'
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { label: 'Панель', icon: DashboardOutlinedIcon, path: '/', permission: null },
   { label: 'Магазины', icon: StorefrontOutlinedIcon, path: '/stores', permission: 'canViewStores' },
   { label: 'План', icon: AssessmentOutlinedIcon, path: '/plan', permission: 'canViewPlan' },
+  { label: 'Штатное расписание', icon: ListAltOutlinedIcon, path: '/staffing', permission: 'canManageStaffing' },
   { label: 'РМ · регион', icon: MapOutlinedIcon, path: '/rm', permission: 'canViewRegion' },
   { label: 'HR', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
   { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canManageUsers' },

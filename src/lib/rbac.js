@@ -31,6 +31,7 @@ const NONE = {
   canViewPlan: false,        // сводный «План»
   canViewRegion: false,      // раздел «РМ» (магазины региона)
   canManageHr: false,        // раздел «HR» (назначения)
+  canManageStaffing: false,  // раздел «Штатное расписание» + загрузка отчёта
 }
 
 /** Что умеет каждая роль */
@@ -38,12 +39,13 @@ export const PERMISSIONS = {
   [ROLES.ADMIN]: {
     canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canViewAdminFields: true,
     canViewStores: true, canEditVacancies: true, canViewPlan: true, canViewRegion: true, canManageHr: true,
+    canManageStaffing: true,
   },
   [ROLES.EDITOR]: { ...NONE, canCreate: true, canEdit: true },
   [ROLES.VIEWER]: { ...NONE },
   [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true },
   [ROLES.RM]: { ...NONE, canViewRegion: true },
-  [ROLES.HR]: { ...NONE, canViewStores: true, canManageHr: true },
+  [ROLES.HR]: { ...NONE, canViewStores: true, canManageHr: true, canManageStaffing: true },
 }
 
 /** Хук-помощник: can(role, 'canEdit') */
