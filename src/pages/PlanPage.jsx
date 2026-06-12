@@ -79,9 +79,14 @@ export default function PlanPage() {
   const pct = (field, headerName, colored = true) => ({
     field, headerName, ...n(120),
     renderCell: ({ value }) => {
-      if (!colored) return <Typography sx={{ fontSize: '0.8rem' }}>{value}%</Typography>
-      const low = value < 90
-      return <Typography sx={{ fontSize: '0.8rem', fontWeight: low ? 700 : 400, color: low ? 'error.main' : 'success.main' }}>{value}%</Typography>
+      const tsx = colored
+        ? { fontSize: '0.8rem', fontWeight: value < 90 ? 700 : 400, color: value < 90 ? 'error.main' : 'success.main' }
+        : { fontSize: '0.8rem' }
+      return (
+        <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography sx={tsx}>{value}%</Typography>
+        </Box>
+      )
     },
   })
 

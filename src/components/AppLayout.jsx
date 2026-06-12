@@ -126,15 +126,15 @@ export default function AppLayout({ children }) {
         {/* Logo + Pin */}
         <Box sx={{ px: expanded ? 2 : 0, py: 2, display: 'flex', alignItems: 'center', gap: 1.25, justifyContent: expanded ? 'space-between' : 'center', minHeight: 64 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-            <Box sx={{ width: 30, height: 30, flexShrink: 0, borderRadius: 1.5, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#0F1117', lineHeight: 1 }}>D</Typography>
+            <Box sx={{ width: 30, height: 30, flexShrink: 0, borderRadius: 1.5, bgcolor: 'error.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1 }}>Т</Typography>
             </Box>
             {expanded && (
               <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }} noWrap>DataPanel</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }} noWrap>Toimart</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
                   <CircleIcon sx={{ fontSize: 7, color: 'primary.main' }} />
-                  <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>supabase</Typography>
+                  <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>подключено</Typography>
                 </Box>
               </Box>
             )}
@@ -194,10 +194,6 @@ export default function AppLayout({ children }) {
         <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary' }}>
           <Toolbar variant="dense" sx={{ minHeight: 52, gap: 1 }}>
             <Box sx={{ flex: 1 }} />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <CircleIcon sx={{ fontSize: 8, color: 'primary.main' }} />
-              <Typography sx={{ fontSize: 11, color: 'text.secondary', fontFamily: 'monospace' }}>подключено</Typography>
-            </Box>
           </Toolbar>
         </AppBar>
 
