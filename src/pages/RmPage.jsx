@@ -96,7 +96,7 @@ export default function RmPage() {
   const gridRows = useMemo(() => regionStores.map(s => {
     const a = agg.get(s.id) ?? { shtat: 0, work: 0, fakt: 0 }
     const ukompl = a.shtat > 0 ? Math.round(a.work / a.shtat * 100) : 0
-    return { id: s.id, code: s.code, name: s.name, vid: s.vid, dm_name: s.dm_name, shtat: r1(a.shtat), work: r1(a.work), vsego: r1(a.fakt + planByStore(s.id)), ukompl }
+    return { id: s.id, code: s.code, name: s.name, vid: s.vid, dm_name: s.director?.name ?? s.dm_name, shtat: r1(a.shtat), work: r1(a.work), vsego: r1(a.fakt + planByStore(s.id)), ukompl }
   }), [regionStores, agg, planByStore])
 
   const handleDelete = async () => {
@@ -147,7 +147,7 @@ export default function RmPage() {
         <FormControl size="small" sx={{ minWidth: 300 }}>
           <InputLabel>Менеджер (регион)</InputLabel>
           <Select value={regionId} label="Менеджер (регион)" onChange={e => setRegionId(e.target.value)} disabled={sLoading || myRegions.length <= 1 && role !== 'admin'}>
-            {myRegions.map(r => <MenuItem key={r.id} value={r.id}>{r.code}{r.name ? ` — ${r.name}` : ''}</MenuItem>)}
+            {myRegions.map(r => { const nm = r.rm?.name ?? r.name; return <MenuItem key={r.id} value={r.id}>{r.code}{nm ? ` — ${nm}` : ''}</MenuItem> })}
           </Select>
         </FormControl>
         <Chip size="small" label={`магазинов: ${regionStores.length}`} />
@@ -172,7 +172,7 @@ export default function RmPage() {
       {addOpen && (
         <AddStoreDialog
           regionId={regionId}
-          regionLabel={selectedRegion ? `${selectedRegion.code}${selectedRegion.name ? ' — ' + selectedRegion.name : ''}` : ''}
+          regionLabel={selectedRegion ? `${selectedRegion.code}${(selectedRegion.rm?.name ?? selectedRegion.name) ? ' — ' + (selectedRegion.rm?.name ?? selectedRegion.name) : ''}` : ''}
           allStores={stores}
           onClose={() => setAddOpen(false)}
           onError={(m) => toast(m, 'error')}

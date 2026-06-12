@@ -69,8 +69,9 @@ export function useUsers() {
     }
   }
 
-  // Полная замена набора магазинов/регионов пользователя (delete-then-insert)
-  const setUserStores = async (userId, storeIds) => {
+  // Полная замена набора магазинов пользователя (скоуп user_stores)
+  // + проставление его как ДМ этих магазинов (stores.director_id).
+  const setUserStores = async (userId, storeIds, name) => {
     const del = await supabase.from('user_stores').delete().eq('user_id', userId)
     if (del.error) throw del.error
     if (storeIds.length) {
@@ -79,8 +80,17 @@ export function useUsers() {
         .insert(storeIds.map(store_id => ({ user_id: userId, store_id })))
       if (error) throw error
     }
+    // снять привязку ДМ со всех прежних магазинов юзера, затем назначить выбранные
+    const clr = await supabase.from('stores').update({ director_id: null }).eq('director_id', userId)
+    if (clr.error) throw clr.error
+    if (storeIds.length) {
+      // FK + денормализованное ФИО для отображения (dm_name)
+      const patch = name ? { director_id: userId, dm_name: name } : { director_id: userId }
+      const upd = await supabase.from('stores').update(patch).in('id', storeIds)
+      if (upd.error) throw upd.error
+    }
   }
-  const setUserRegions = async (userId, regionIds) => {
+  const setUserRegions = async (userId, regionIds, name) => {
     const del = await supabase.from('user_regions').delete().eq('user_id', userId)
     if (del.error) throw del.error
     if (regionIds.length) {
@@ -88,6 +98,13 @@ export function useUsers() {
         .from('user_regions')
         .insert(regionIds.map(region_id => ({ user_id: userId, region_id })))
       if (error) throw error
+    }
+    const clr = await supabase.from('regions').update({ rm_id: null }).eq('rm_id', userId)
+    if (clr.error) throw clr.error
+    if (regionIds.length) {
+      const patch = name ? { rm_id: userId, name } : { rm_id: userId }
+      const upd = await supabase.from('regions').update(patch).in('id', regionIds)
+      if (upd.error) throw upd.error
     }
   }
 

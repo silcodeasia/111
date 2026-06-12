@@ -17,6 +17,7 @@ import RoleGuard from '../components/RoleGuard'
 /** Диалог создания пользователя (через Edge Function admin-create-user) */
 function AddUserDialog({ onClose, onCreated, onError }) {
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('viewer')
   const [saving, setSaving] = useState(false)
@@ -24,7 +25,7 @@ function AddUserDialog({ onClose, onCreated, onError }) {
     setSaving(true)
     // слаг задеплоенной функции (Supabase создал её под автоименем swift-api)
     const { data, error } = await supabase.functions.invoke('swift-api', {
-      body: { email: email.trim(), password, role },
+      body: { email: email.trim(), password, role, name: name.trim() },
     })
     setSaving(false)
     if (error) {
@@ -47,7 +48,8 @@ function AddUserDialog({ onClose, onCreated, onError }) {
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontSize: '1rem' }}>Новый пользователь</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-        <TextField label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} fullWidth sx={{ mt: 1 }} autoComplete="off" />
+        <TextField label="ФИО" value={name} onChange={e => setName(e.target.value)} fullWidth sx={{ mt: 1 }} placeholder="Иванов Иван Иванович" />
+        <TextField label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} fullWidth autoComplete="off" />
         <TextField label="Пароль" value={password} onChange={e => setPassword(e.target.value)} helperText="Минимум 6 символов" fullWidth autoComplete="new-password" />
         <TextField label="Роль" value={role} onChange={e => setRole(e.target.value)} select fullWidth>
           {Object.entries(ROLE_META).map(([v, m]) => <MenuItem key={v} value={v}>{m.label}</MenuItem>)}
@@ -84,9 +86,9 @@ function AccessDialog({ user, stores, regions, api, onClose, onSaved, onError })
   const save = async () => {
     setSaving(true)
     try {
-      // синхронизируем оба набора по роли (неактуальный обнуляем)
-      await api.setUserStores(user.id, isDirector ? storeSel.map(s => s.id) : [])
-      await api.setUserRegions(user.id, isRm ? regionSel.map(r => r.id) : [])
+      // синхронизируем оба набора по роли (неактуальный обнуляем); ФИО — в dm_name/regions.name
+      await api.setUserStores(user.id, isDirector ? storeSel.map(s => s.id) : [], user.name)
+      await api.setUserRegions(user.id, isRm ? regionSel.map(r => r.id) : [], user.name)
       onSaved('Доступ сохранён')
       onClose()
     } catch (err) {

@@ -150,7 +150,7 @@ export default function StoresPage() {
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
             {currentStore.vid && <Chip size="small" label={currentStore.vid} />}
             {currentStore.region?.code && <Chip size="small" color="primary" label={currentStore.region.code} />}
-            {currentStore.dm_name && <Chip size="small" variant="outlined" label={`ДМ: ${currentStore.dm_name}`} />}
+            {(currentStore.director?.name || currentStore.dm_name) && <Chip size="small" variant="outlined" label={`ДМ: ${currentStore.director?.name ?? currentStore.dm_name}`} />}
           </Box>
         )}
       </Paper>

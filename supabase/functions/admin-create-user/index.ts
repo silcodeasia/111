@@ -31,21 +31,22 @@ Deno.serve(async (req) => {
     if (prof?.role !== 'admin') return json({ error: `Требуются права администратора (роль: ${prof?.role ?? 'нет профиля'})` }, 403)
 
     // 3. Создаём пользователя
-    const { email, password, role } = await req.json()
+    const { email, password, role, name } = await req.json()
     if (!email || !password) return json({ error: 'Укажите email и пароль' }, 400)
     if (String(password).length < 6) return json({ error: 'Пароль не короче 6 символов' }, 400)
     const r = ROLES.includes(role) ? role : 'viewer'
+    const fullName = (name ?? '').toString().trim() || null
 
     const { data: created, error: cErr } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { role: r },
+      user_metadata: { role: r, name: fullName },
     })
     if (cErr) return json({ error: cErr.message }, 400)
 
-    // гарантируем профиль с нужной ролью (на случай отличий триггера)
-    await admin.from('profiles').upsert({ id: created.user!.id, email, role: r })
+    // гарантируем профиль с ролью и ФИО (на случай отличий триггера)
+    await admin.from('profiles').upsert({ id: created.user!.id, email, name: fullName, role: r })
 
     return json({ ok: true, id: created.user!.id, role: r })
   } catch (e) {

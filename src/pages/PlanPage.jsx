@@ -59,7 +59,8 @@ export default function PlanPage() {
       const ukompl = a.shtat > 0 ? (itogo / a.shtat) * 100 : 0
       return {
         id: st.id, n: i + 1, store: st.name, recruiter: '—',
-        rm: st.region?.name ?? st.region?.code ?? '—', dm: st.dm_name ?? '—',
+        rm: st.region?.rm?.name ?? st.region?.name ?? st.region?.code ?? '—',
+        dm: st.director?.name ?? st.dm_name ?? '—',
         shtat: r1(a.shtat), zup: r1(a.zup), neof: r1(a.neof), stazh: r1(a.stazh), itogo: r1(itogo),
         fakt: r1(a.fakt), plan: r1(plan), vsego: r1(a.fakt + plan),
         nehvatka: Math.round(100 - ukompl), ukompl: Math.round(ukompl),
