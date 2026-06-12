@@ -10,6 +10,14 @@ import { useVacancies } from '../hooks/useVacancies'
 const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : 0)
 const r1 = (x) => Math.round(x * 10) / 10 // 1 знак
 
+// какая колонка к какой группе относится (для фоновой подсветки)
+const GRP = {
+  n: 'g1', store: 'g1', recruiter: 'g1', rm: 'g1', dm: 'g1', shtat: 'g1',
+  zup: 'g2', neof: 'g2', stazh: 'g2', itogo: 'g2',
+  vac: 'g3', aup: 'g3', lineyka: 'g3', other: 'g3',
+  nehvatka: 'g4', ukompl: 'g4',
+}
+
 function Stat({ label, value, color }) {
   return (
     <Paper sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.02)' }}>
@@ -89,7 +97,7 @@ export default function PlanPage() {
     },
   })
 
-  const columns = [
+  const baseColumns = [
     { field: 'n', headerName: '№', width: 56, headerAlign: 'center', align: 'center' },
     { field: 'store', headerName: 'Магазин', flex: 1, minWidth: 180 },
     { field: 'recruiter', headerName: 'Рекрутер', width: 110 },
@@ -108,10 +116,17 @@ export default function PlanPage() {
     pct('ukompl', 'Укомпл.'),
   ]
 
+  // вешаем класс группы на заголовок и ячейки колонки → фон через sx
+  const columns = baseColumns.map(c => ({
+    ...c,
+    headerClassName: `grp-${GRP[c.field]}`,
+    cellClassName: `grp-${GRP[c.field]}`,
+  }))
+
   const columnGroupingModel = [
-    { groupId: 'g1', headerName: 'Общая информация', children: [{ field: 'n' }, { field: 'store' }, { field: 'recruiter' }, { field: 'rm' }, { field: 'dm' }, { field: 'shtat' }] },
-    { groupId: 'g2', headerName: 'Трудоустроенность', children: [{ field: 'zup' }, { field: 'neof' }, { field: 'stazh' }, { field: 'itogo' }] },
-    { groupId: 'g3', headerName: 'План вакансий', children: [{ field: 'vac' }, { field: 'aup' }, { field: 'lineyka' }, { field: 'other' }] },
+    { groupId: 'g1', headerName: 'Общая информация', headerClassName: 'grp-g1', children: [{ field: 'n' }, { field: 'store' }, { field: 'recruiter' }, { field: 'rm' }, { field: 'dm' }, { field: 'shtat' }] },
+    { groupId: 'g2', headerName: 'Трудоустроенность', headerClassName: 'grp-g2', children: [{ field: 'zup' }, { field: 'neof' }, { field: 'stazh' }, { field: 'itogo' }] },
+    { groupId: 'g3', headerName: 'План вакансий', headerClassName: 'grp-g3', children: [{ field: 'vac' }, { field: 'aup' }, { field: 'lineyka' }, { field: 'other' }] },
     { groupId: 'g4', headerName: '%', children: [{ field: 'nehvatka' }, { field: 'ukompl' }] },
   ]
 
@@ -144,7 +159,14 @@ export default function PlanPage() {
           pageSizeOptions={[25, 50, 100]}
           initialState={{ pagination: { paginationModel: { pageSize: 50 } } }}
           slots={{ toolbar: Toolbar }}
-          sx={{ border: 'none', '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 600 } }}
+          sx={{
+            border: 'none',
+            '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 600 },
+            // фоновая подсветка групп колонок (заголовки + ячейки)
+            '& .grp-g1': { backgroundColor: 'rgba(62,207,142,0.07)' },
+            '& .grp-g2': { backgroundColor: 'rgba(56,132,255,0.10)' },
+            '& .grp-g3': { backgroundColor: 'rgba(251,191,36,0.09)' },
+          }}
         />
       </Paper>
     </Box>
