@@ -10,7 +10,6 @@ const SELECT = '*, store:stores(id, name, code, region:regions(code))'
  */
 export function useStaffing() {
   const [rows, setRows] = useState([])
-  const [zupMap, setZupMap] = useState(new Map())
   const [planMap, setPlanMap] = useState(new Map())       // store|тип → qty
   const [planStoreMap, setPlanStoreMap] = useState(new Map()) // store → Σ qty
   const [loading, setLoading] = useState(true)
@@ -18,20 +17,12 @@ export function useStaffing() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true); setError(null)
-    const [s, r, v] = await Promise.all([
+    const [s, v] = await Promise.all([
       supabase.from('staffing').select(SELECT).order('store_id').order('position'),
-      supabase.from('report').select('store_id, dolzhnost'),
       supabase.from('vacancies').select('store_id, vacancy_type, qty'),
     ])
     if (s.error) setError(s.error.message)
     else setRows(s.data ?? [])
-
-    const zm = new Map()
-    for (const row of (r.data ?? [])) {
-      const k = `${row.store_id}|${norm(row.dolzhnost)}`
-      zm.set(k, (zm.get(k) || 0) + 1)
-    }
-    setZupMap(zm)
 
     const pm = new Map(), psm = new Map()
     for (const row of (v.data ?? [])) {
@@ -45,7 +36,7 @@ export function useStaffing() {
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
-  const zupOf = useCallback((storeId, position) => zupMap.get(`${storeId}|${norm(position)}`) ?? 0, [zupMap])
+  // ЗУП хранится в staffing.zup (обновляется из отчёта)
   const planOf = useCallback((storeId, position) => planMap.get(`${storeId}|${norm(position)}`) ?? 0, [planMap])
   const planByStore = useCallback((storeId) => planStoreMap.get(storeId) ?? 0, [planStoreMap])
 
@@ -89,11 +80,13 @@ export function useStaffing() {
       const { error } = await supabase.from('report').insert(records.slice(i, i + 500))
       if (error) throw error
     }
+    const rpc = await supabase.rpc('refresh_staffing_zup') // пересчёт staffing.zup
+    if (rpc.error) throw rpc.error
     await fetchAll()
   }
 
   const processRowUpdate = async (newRow) => update(newRow.id, newRow)
   const clearError = useCallback(() => setError(null), [])
 
-  return { rows, zupOf, planOf, planByStore, loading, error, clearError, refetch: fetchAll, update, add, remove, replaceReport, processRowUpdate }
+  return { rows, planOf, planByStore, loading, error, clearError, refetch: fetchAll, update, add, remove, replaceReport, processRowUpdate }
 }

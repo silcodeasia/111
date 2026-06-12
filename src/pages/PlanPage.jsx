@@ -40,13 +40,13 @@ function Toolbar() {
 
 export default function PlanPage() {
   const { stores, loading: sLoading, error } = useStores()
-  const { rows: staffing, zupOf, planByStore, loading: stLoading } = useStaffing()
+  const { rows: staffing, planByStore, loading: stLoading } = useStaffing()
 
   const rows = useMemo(() => {
     const agg = new Map()
     for (const s of staffing) {
       const a = agg.get(s.store_id) ?? { shtat: 0, zup: 0, neof: 0, stazh: 0, fakt: 0 }
-      const zup = zupOf(s.store_id, s.position)
+      const zup = num(s.zup)
       const work = zup + num(s.neof) + num(s.stazhirovka)
       a.shtat += num(s.shtat); a.zup += zup; a.neof += num(s.neof); a.stazh += num(s.stazhirovka)
       a.fakt += Math.max(num(s.shtat) - work, 0)
@@ -65,7 +65,7 @@ export default function PlanPage() {
         nehvatka: Math.round(100 - ukompl), ukompl: Math.round(ukompl),
       }
     })
-  }, [staffing, stores, zupOf, planByStore])
+  }, [staffing, stores, planByStore])
 
   const totals = useMemo(() => {
     const shtat = rows.reduce((s, r) => s + r.shtat, 0)

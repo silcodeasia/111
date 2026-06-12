@@ -51,7 +51,7 @@ function AddDialog({ stores, onClose, onAdd }) {
 }
 
 export default function StaffingPage() {
-  const { rows, zupOf, planOf, loading, error, clearError, processRowUpdate, add, remove, replaceReport } = useStaffing()
+  const { rows, planOf, loading, error, clearError, processRowUpdate, add, remove, replaceReport } = useStaffing()
   const { stores } = useStores()
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
   const [addOpen, setAddOpen] = useState(false)
@@ -66,12 +66,12 @@ export default function StaffingPage() {
   }, [stores])
 
   const gridRows = useMemo(() => rows.map(s => {
-    const zup = zupOf(s.store_id, s.position)
+    const zup = num(s.zup)
     const rabotaet = zup + num(s.neof) + num(s.stazhirovka)
     const fakt = Math.max(num(s.shtat) - rabotaet, 0)
     const plan = planOf(s.store_id, s.position)
     return { ...s, storeName: s.store?.name ?? '—', zup, rabotaet, fakt, plan, vsego: fakt + plan }
-  }), [rows, zupOf, planOf])
+  }), [rows, planOf])
 
   const handleUpload = async (file) => {
     if (!file) return
