@@ -18,11 +18,19 @@ create policy "staffing write" on staffing for all to authenticated
   with check ( is_admin() or current_user_role() = 'hr' or (current_user_role() = 'director' and user_can_access_store(store_id)) );
 
 -- Пересчёт ЗУП в staffing из отчёта (count по магазину+должности)
+-- нормализация текста (ё→е, nbsp, схлопывание пробелов, lower, trim)
+create or replace function norm_txt(t text)
+returns text language sql immutable as $$
+  select btrim(lower(regexp_replace(
+           replace(replace(coalesce(t, ''), 'ё', 'е'), chr(160), ' '),
+           '\s+', ' ', 'g')))
+$$;
+
 create or replace function refresh_staffing_zup()
 returns void
 language sql security definer set search_path = public as $$
-  -- WHERE обязателен (Supabase блокирует UPDATE без условия); обновляем
-  -- только изменившиеся строки, остальным выставляем 0.
+  -- WHERE обязателен (Supabase блокирует UPDATE без условия); совпадение
+  -- должностей через norm_txt; обновляем только изменившиеся строки.
   update staffing s
   set zup = sub.cnt
   from (
@@ -30,7 +38,7 @@ language sql security definer set search_path = public as $$
            coalesce((
              select count(*) from report r
              where r.store_id = st.store_id
-               and lower(btrim(r.dolzhnost)) = lower(btrim(st.position))
+               and norm_txt(r.dolzhnost) = norm_txt(st.position)
            ), 0) as cnt
     from staffing st
   ) sub

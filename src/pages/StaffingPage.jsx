@@ -8,6 +8,7 @@ import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { DataGrid, GridToolbarContainer, GridToolbarQuickFilter, GridToolbarExport } from '@mui/x-data-grid'
+import { supabase } from '../lib/supabase'
 import { useStaffing } from '../hooks/useStaffing'
 import { useStores } from '../hooks/useStores'
 
@@ -98,7 +99,9 @@ export default function StaffingPage() {
         records.push({ store_id: store?.id ?? null, podrazdelenie: pod ?? null, dolzhnost: String(dol).trim() })
       }
       await replaceReport(records)
-      toast(`Отчёт загружен: ${records.length} строк${unmatched ? `, без магазина: ${unmatched}` : ''}`)
+      const matched = records.length - unmatched
+      const { count: zupCount } = await supabase.from('staffing').select('id', { count: 'exact', head: true }).gt('zup', 0)
+      toast(`✓ Отчёт загружен: ${records.length} строк, магазин определён у ${matched}. Позиций с ЗУП: ${zupCount ?? '—'}.`)
     } catch (err) {
       toast(err.message ?? 'Ошибка загрузки', 'error')
     } finally {
@@ -202,7 +205,7 @@ export default function StaffingPage() {
 
       {addOpen && <AddDialog stores={stores} onClose={() => setAddOpen(false)} onAdd={async (v) => { await add(v); toast('Строка добавлена') }} />}
 
-      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+      <Snackbar open={snack.open} autoHideDuration={6000} onClose={() => setSnack(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
         <Alert severity={snack.severity} sx={{ fontSize: '0.8rem' }} onClose={() => setSnack(s => ({ ...s, open: false }))}>{snack.message}</Alert>
       </Snackbar>
     </Box>
