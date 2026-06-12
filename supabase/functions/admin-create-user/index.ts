@@ -17,19 +17,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   try {
     const url = Deno.env.get('SUPABASE_URL')!
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const admin = createClient(url, serviceKey)
 
-    // 1. Кто вызвал — по JWT из заголовка
-    const authHeader = req.headers.get('Authorization') ?? ''
-    const caller = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } })
-    const { data: { user }, error: uErr } = await caller.auth.getUser()
-    if (uErr || !user) return json({ error: 'Не авторизован' }, 401)
+    // 1. Кто вызвал — валидируем токен из заголовка явно
+    const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+    if (!token) return json({ error: 'Нет токена авторизации' }, 401)
+    const { data: { user }, error: uErr } = await admin.auth.getUser(token)
+    if (uErr || !user) return json({ error: 'Не авторизован: ' + (uErr?.message ?? 'нет пользователя') }, 401)
 
     // 2. Проверяем, что вызвавший — admin
-    const admin = createClient(url, serviceKey)
     const { data: prof } = await admin.from('profiles').select('role').eq('id', user.id).single()
-    if (prof?.role !== 'admin') return json({ error: 'Требуются права администратора' }, 403)
+    if (prof?.role !== 'admin') return json({ error: `Требуются права администратора (роль: ${prof?.role ?? 'нет профиля'})` }, 403)
 
     // 3. Создаём пользователя
     const { email, password, role } = await req.json()
