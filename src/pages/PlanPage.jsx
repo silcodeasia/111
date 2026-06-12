@@ -89,10 +89,11 @@ export default function PlanPage() {
   }, [rows])
 
   const n = (w = 80) => ({ type: 'number', width: w, headerAlign: 'center', align: 'center' })
-  const pct = (field, headerName) => ({
+  const pct = (field, headerName, colored = true) => ({
     field, headerName, ...n(120),
     renderCell: ({ value }) => {
-      const low = field === 'ukompl' ? value < 90 : value > 10
+      if (!colored) return <Typography sx={{ fontSize: '0.8rem' }}>{value}%</Typography>
+      const low = value < 90
       return <Typography sx={{ fontSize: '0.8rem', fontWeight: low ? 700 : 400, color: low ? 'error.main' : 'success.main' }}>{value}%</Typography>
     },
   })
@@ -112,7 +113,7 @@ export default function PlanPage() {
     { field: 'aup', headerName: 'АУП', ...n(70) },
     { field: 'lineyka', headerName: 'Линейка', ...n(80) },
     { field: 'other', headerName: 'Прочее', ...n(80) },
-    pct('nehvatka', 'Нехватка'),
+    pct('nehvatka', 'Нехватка', false),
     pct('ukompl', 'Укомпл.'),
   ]
 

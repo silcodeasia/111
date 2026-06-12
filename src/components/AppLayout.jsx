@@ -13,10 +13,13 @@ import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
 import CircleIcon from '@mui/icons-material/Circle'
+import PushPinIcon from '@mui/icons-material/PushPin'
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
 import { useAuth } from '../context/AuthContext'
 import { can, ROLE_META } from '../lib/rbac'
 
 const DRAWER_WIDTH = 224
+const COLLAPSED_WIDTH = 64
 
 const NAV_ITEMS = [
   { label: 'Панель', icon: DashboardOutlinedIcon, path: '/', permission: null },
@@ -27,51 +30,62 @@ const NAV_ITEMS = [
   { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canManageUsers' },
 ]
 
-function NavItem({ item, role }) {
+function NavItem({ item, expanded }) {
   const location = useLocation()
-  const locked = item.permission && !can(role, item.permission)
   const active = location.pathname === item.path
 
   const btn = (
     <ListItemButton
-      component={locked ? 'div' : Link}
-      to={locked ? undefined : item.path}
+      component={Link}
+      to={item.path}
       selected={active}
-      disabled={locked}
       sx={{
         mx: 1,
         borderRadius: 1.5,
         mb: 0.25,
+        minHeight: 40,
+        justifyContent: expanded ? 'initial' : 'center',
+        px: expanded ? 1.5 : 1,
         '&.Mui-selected': {
           bgcolor: 'rgba(62,207,142,0.10)',
           color: 'primary.main',
           '& .MuiListItemIcon-root': { color: 'primary.main' },
           '&:hover': { bgcolor: 'rgba(62,207,142,0.15)' },
         },
-        '&.Mui-disabled': { opacity: 0.35 },
       }}
     >
-      <ListItemIcon sx={{ minWidth: 34, color: active ? 'primary.main' : 'text.secondary' }}>
+      <ListItemIcon sx={{ minWidth: 0, mr: expanded ? 1.25 : 0, justifyContent: 'center', color: active ? 'primary.main' : 'text.secondary' }}>
         <item.icon fontSize="small" />
       </ListItemIcon>
-      <ListItemText
-        primary={item.label}
-        primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: active ? 500 : 400 }}
-      />
+      {expanded && (
+        <ListItemText
+          primary={item.label}
+          primaryTypographyProps={{ fontSize: '0.8125rem', fontWeight: active ? 500 : 400, noWrap: true }}
+        />
+      )}
     </ListItemButton>
   )
 
-  return locked ? (
-    <Tooltip title={`Требуется право: ${item.permission}`} placement="right">
-      <span>{btn}</span>
-    </Tooltip>
-  ) : btn
+  // в свёрнутом виде показываем подпись тултипом
+  return expanded ? btn : (
+    <Tooltip title={item.label} placement="right">{btn}</Tooltip>
+  )
 }
 
 export default function AppLayout({ children }) {
   const { role, session, signOut } = useAuth()
   const navigate = useNavigate()
   const roleMeta = ROLE_META[role] ?? ROLE_META.viewer
+
+  const [pinned, setPinned] = useState(() => localStorage.getItem('sidebarPinned') !== 'false')
+  const [hovered, setHovered] = useState(false)
+  const expanded = pinned || hovered
+  const overlay = hovered && !pinned // раскрытие поверх контента
+
+  const togglePin = () => setPinned(p => {
+    localStorage.setItem('sidebarPinned', String(!p))
+    return !p
+  })
 
   const handleSignOut = async () => {
     await signOut()
@@ -81,48 +95,68 @@ export default function AppLayout({ children }) {
   const email = session?.user?.email ?? '—'
   const initials = email.slice(0, 2).toUpperCase()
 
+  const items = NAV_ITEMS.filter(item => !item.permission || can(role, item.permission))
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* ── Sidebar ── */}
       <Drawer
         variant="permanent"
+        // зарезервированная ширина зависит только от pinned → при hover контент не дёргается
         sx={{
-          width: DRAWER_WIDTH,
+          width: pinned ? DRAWER_WIDTH : COLLAPSED_WIDTH,
           flexShrink: 0,
-          '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box' },
+          whiteSpace: 'nowrap',
+          '& .MuiDrawer-paper': {
+            width: expanded ? DRAWER_WIDTH : COLLAPSED_WIDTH,
+            boxSizing: 'border-box',
+            overflowX: 'hidden',
+            transition: 'width 0.2s ease',
+            zIndex: theme => theme.zIndex.drawer + (overlay ? 1 : 0),
+            boxShadow: overlay ? 8 : 'none',
+          },
+        }}
+        PaperProps={{
+          onMouseEnter: () => setHovered(true),
+          onMouseLeave: () => setHovered(false),
         }}
       >
-        {/* Logo */}
-        <Box sx={{ px: 2.5, py: 2, display: 'flex', alignItems: 'center', gap: 1.25 }}>
-          <Box
-            sx={{
-              width: 30, height: 30, borderRadius: 1.5,
-              bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#0F1117', lineHeight: 1 }}>D</Typography>
-          </Box>
-          <Box>
-            <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }}>DataPanel</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
-              <CircleIcon sx={{ fontSize: 7, color: 'primary.main' }} />
-              <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>supabase</Typography>
+        {/* Logo + Pin */}
+        <Box sx={{ px: expanded ? 2 : 0, py: 2, display: 'flex', alignItems: 'center', gap: 1.25, justifyContent: expanded ? 'space-between' : 'center', minHeight: 64 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
+            <Box sx={{ width: 30, height: 30, flexShrink: 0, borderRadius: 1.5, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#0F1117', lineHeight: 1 }}>D</Typography>
             </Box>
+            {expanded && (
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }} noWrap>DataPanel</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
+                  <CircleIcon sx={{ fontSize: 7, color: 'primary.main' }} />
+                  <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>supabase</Typography>
+                </Box>
+              </Box>
+            )}
           </Box>
+          {expanded && (
+            <Tooltip title={pinned ? 'Открепить меню' : 'Закрепить меню'} placement="right">
+              <IconButton size="small" onClick={togglePin} sx={{ color: pinned ? 'primary.main' : 'text.disabled' }}>
+                {pinned ? <PushPinIcon sx={{ fontSize: 18 }} /> : <PushPinOutlinedIcon sx={{ fontSize: 18 }} />}
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
 
         <Divider sx={{ borderColor: 'divider', mb: 1 }} />
 
         {/* Nav */}
         <List dense disablePadding sx={{ flex: 1 }}>
-          <Typography
-            variant="caption"
-            sx={{ px: 2.5, pt: 1, pb: 0.5, display: 'block', color: 'text.disabled', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}
-          >
-            Навигация
-          </Typography>
-          {NAV_ITEMS.filter(item => !item.permission || can(role, item.permission)).map(item => (
-            <NavItem key={item.path} item={item} role={role} />
+          {expanded && (
+            <Typography variant="caption" sx={{ px: 2.5, pt: 1, pb: 0.5, display: 'block', color: 'text.disabled', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+              Навигация
+            </Typography>
+          )}
+          {items.map(item => (
+            <NavItem key={item.path} item={item} expanded={expanded} />
           ))}
         </List>
 
@@ -130,49 +164,32 @@ export default function AppLayout({ children }) {
 
         {/* User */}
         <Box sx={{ px: 1.5, py: 1.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: 1, py: 0.75 }}>
-            <Avatar
-              sx={{
-                width: 32, height: 32, fontSize: 12, fontWeight: 600,
-                bgcolor: 'rgba(62,207,142,0.15)',
-                color: 'primary.main',
-                border: '1px solid rgba(62,207,142,0.25)',
-              }}
-            >
-              {initials}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {email}
-              </Typography>
-              <Chip
-                label={roleMeta.label}
-                color={roleMeta.color}
-                size="small"
-                sx={{ height: 18, fontSize: '0.68rem', mt: 0.25, borderRadius: 1 }}
-              />
-            </Box>
-            <Tooltip title="Выйти">
-              <IconButton size="small" onClick={handleSignOut} sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}>
-                <LogoutIcon fontSize="small" />
-              </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, px: expanded ? 1 : 0, py: 0.75, justifyContent: expanded ? 'flex-start' : 'center' }}>
+            <Tooltip title={expanded ? '' : `${email} · ${roleMeta.label}`} placement="right">
+              <Avatar sx={{ width: 32, height: 32, flexShrink: 0, fontSize: 12, fontWeight: 600, bgcolor: 'rgba(62,207,142,0.15)', color: 'primary.main', border: '1px solid rgba(62,207,142,0.25)' }}>
+                {initials}
+              </Avatar>
             </Tooltip>
+            {expanded && (
+              <>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email}</Typography>
+                  <Chip label={roleMeta.label} color={roleMeta.color} size="small" sx={{ height: 18, fontSize: '0.68rem', mt: 0.25, borderRadius: 1 }} />
+                </Box>
+                <Tooltip title="Выйти">
+                  <IconButton size="small" onClick={handleSignOut} sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}>
+                    <LogoutIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
           </Box>
         </Box>
       </Drawer>
 
       {/* ── Main ── */}
       <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <AppBar
-          position="static"
-          elevation={0}
-          sx={{
-            bgcolor: 'background.paper',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            color: 'text.primary',
-          }}
-        >
+        <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider', color: 'text.primary' }}>
           <Toolbar variant="dense" sx={{ minHeight: 52, gap: 1 }}>
             <Box sx={{ flex: 1 }} />
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
