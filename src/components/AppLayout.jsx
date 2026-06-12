@@ -4,7 +4,6 @@ import {
   Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText,
   Typography, Avatar, Chip, Divider, Tooltip, IconButton,
 } from '@mui/material'
-import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined'
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
@@ -22,13 +21,12 @@ const DRAWER_WIDTH = 224
 const COLLAPSED_WIDTH = 64
 
 const NAV_ITEMS = [
-  { label: 'Панель', icon: DashboardOutlinedIcon, path: '/', permission: null },
-  { label: 'Магазины', icon: StorefrontOutlinedIcon, path: '/stores', permission: 'canViewStores' },
   { label: 'План', icon: AssessmentOutlinedIcon, path: '/plan', permission: 'canViewPlan' },
   { label: 'Штатное расписание', icon: ListAltOutlinedIcon, path: '/staffing', permission: 'canManageStaffing' },
   { label: 'РМ · регион', icon: MapOutlinedIcon, path: '/rm', permission: 'canViewRegion' },
+  { label: 'Магазины', icon: StorefrontOutlinedIcon, path: '/stores', permission: 'canViewStores' },
   { label: 'HR', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
-  { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canManageUsers' },
+  { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canViewUsers' },
 ]
 
 function NavItem({ item, expanded }) {

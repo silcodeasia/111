@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
-import { Box, Paper, Typography, Alert, Grid } from '@mui/material'
+import { Box, Paper, Typography, Alert } from '@mui/material'
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
 import {
   DataGrid, GridToolbarContainer, GridToolbarQuickFilter, GridToolbarExport, GridToolbarColumnsButton,
@@ -23,9 +23,9 @@ const TINT = { g1: 'rgba(62,207,142,0.10)', g2: 'rgba(56,132,255,0.13)', g3: 'rg
 
 function Stat({ label, value, color, bg }) {
   return (
-    <Paper sx={{ p: 1.25, bgcolor: bg ?? 'rgba(255,255,255,0.02)', textAlign: 'center' }}>
-      <Typography sx={{ fontSize: '0.64rem', fontFamily: 'monospace', color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.3px', whiteSpace: 'nowrap' }}>{label}</Typography>
-      <Typography sx={{ fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.2, color: color ?? 'text.primary' }}>{value}</Typography>
+    <Paper sx={{ flex: '1 1 0', minWidth: 0, p: 0.75, bgcolor: bg ?? 'rgba(255,255,255,0.02)', textAlign: 'center' }}>
+      <Typography noWrap sx={{ fontSize: '0.56rem', fontFamily: 'monospace', color: 'text.disabled', textTransform: 'uppercase', letterSpacing: '0.2px' }}>{label}</Typography>
+      <Typography noWrap sx={{ fontSize: '1.05rem', fontWeight: 600, lineHeight: 1.15, color: color ?? 'text.primary' }}>{value}</Typography>
     </Paper>
   )
 }
@@ -172,20 +172,20 @@ export default function PlanPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Grid container spacing={1.5} sx={{ mb: 2 }}>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Штат" value={totals.shtat} bg={TINT.g1} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="ЗУП" value={totals.zup} bg={TINT.g2} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="НЕОФ" value={totals.neof} bg={TINT.g2} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="СТАЖ" value={totals.stazh} bg={TINT.g2} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Работает" value={totals.rabotaet} bg={TINT.g2} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Вакансий" value={totals.fakt} bg={TINT.g3} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="АУП" value={totals.aup} bg={TINT.g3} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Грузчики" value={totals.gruzchiki} bg={TINT.g3} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Допек" value={totals.dopek} bg={TINT.g3} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Линейка" value={totals.lineyka} bg={TINT.g3} /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Нехватка" value={`${totals.nehvatka}%`} color="error.main" /></Grid>
-        <Grid item xs={4} sm={3} md={2}><Stat label="Укомпл." value={`${totals.ukompl}%`} color={totals.ukompl < 90 ? 'error.main' : 'success.main'} /></Grid>
-      </Grid>
+      <Box sx={{ display: 'flex', gap: 0.75, mb: 2 }}>
+        <Stat label="Штат" value={totals.shtat} bg={TINT.g1} />
+        <Stat label="ЗУП" value={totals.zup} bg={TINT.g2} />
+        <Stat label="НЕОФ" value={totals.neof} bg={TINT.g2} />
+        <Stat label="СТАЖ" value={totals.stazh} bg={TINT.g2} />
+        <Stat label="Работает" value={totals.rabotaet} bg={TINT.g2} />
+        <Stat label="Вакансий" value={totals.fakt} bg={TINT.g3} />
+        <Stat label="АУП" value={totals.aup} bg={TINT.g3} />
+        <Stat label="Грузчики" value={totals.gruzchiki} bg={TINT.g3} />
+        <Stat label="Допек" value={totals.dopek} bg={TINT.g3} />
+        <Stat label="Линейка" value={totals.lineyka} bg={TINT.g3} />
+        <Stat label="Нехватка" value={`${totals.nehvatka}%`} color="error.main" />
+        <Stat label="Укомпл." value={`${totals.ukompl}%`} color={totals.ukompl < 90 ? 'error.main' : 'success.main'} />
+      </Box>
 
       <Paper sx={{ height: 600 }}>
         <DataGrid

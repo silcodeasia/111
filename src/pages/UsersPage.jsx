@@ -9,7 +9,8 @@ import { DataGrid } from '@mui/x-data-grid'
 import TuneIcon from '@mui/icons-material/Tune'
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1'
 import { supabase } from '../lib/supabase'
-import { ROLES, ROLE_META } from '../lib/rbac'
+import { ROLES, ROLE_META, can } from '../lib/rbac'
+import { useAuth } from '../context/AuthContext'
 import { useUsers } from '../hooks/useUsers'
 import { useStores } from '../hooks/useStores'
 import RoleGuard from '../components/RoleGuard'
@@ -145,6 +146,8 @@ function AccessDialog({ user, stores, regions, api, onClose, onSaved, onError })
 }
 
 export default function UsersPage() {
+  const { role: myRole } = useAuth()
+  const isAdmin = can(myRole, 'canManageUsers')
   const { users, loading, error, updateRole, updateName, getUserScope, setUserStores, setUserRegions, refetch } = useUsers()
   const { stores, regions } = useStores()
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
@@ -176,7 +179,7 @@ export default function UsersPage() {
       renderCell: ({ row }) => {
         const initials = (row.email ?? '??').slice(0, 2).toUpperCase()
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', gap: 1.25 }}>
             <Avatar sx={{ width: 28, height: 28, fontSize: 11, fontWeight: 600, bgcolor: 'rgba(62,207,142,0.12)', color: 'primary.main', border: '1px solid rgba(62,207,142,0.2)' }}>
               {initials}
             </Avatar>
@@ -188,24 +191,28 @@ export default function UsersPage() {
     { field: 'name', headerName: 'ФИО', width: 200, editable: true },
     {
       field: 'role', headerName: 'Роль', width: 170,
-      renderCell: ({ row }) => (
-        <FormControl size="small" variant="standard" sx={{ minWidth: 130 }}>
-          <Select
-            value={row.role ?? ROLES.VIEWER}
-            onChange={(e) => handleRoleChange(row.id, e.target.value)}
-            disableUnderline
-            sx={{ fontSize: '0.8rem' }}
-          >
-            {Object.entries(ROLE_META).map(([value, m]) => (
-              <MenuItem key={value} value={value}>
-                <Chip label={m.label} color={m.color} size="small" sx={{ height: 20, fontSize: '0.7rem', borderRadius: 1, pointerEvents: 'none' }} />
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      ),
+      renderCell: ({ row }) => {
+        const meta = ROLE_META[row.role] ?? ROLE_META.viewer
+        return (
+          <Box sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+            {isAdmin ? (
+              <FormControl size="small" variant="standard" sx={{ minWidth: 130 }}>
+                <Select value={row.role ?? ROLES.VIEWER} onChange={(e) => handleRoleChange(row.id, e.target.value)} disableUnderline sx={{ fontSize: '0.8rem' }}>
+                  {Object.entries(ROLE_META).map(([value, m]) => (
+                    <MenuItem key={value} value={value}>
+                      <Chip label={m.label} color={m.color} size="small" sx={{ height: 20, fontSize: '0.7rem', borderRadius: 1, pointerEvents: 'none' }} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ) : (
+              <Chip label={meta.label} color={meta.color} size="small" sx={{ height: 20, fontSize: '0.7rem', borderRadius: 1 }} />
+            )}
+          </Box>
+        )
+      },
     },
-    {
+    ...(isAdmin ? [{
       field: 'access', headerName: 'Доступ', width: 110, sortable: false, filterable: false,
       renderCell: ({ row }) => {
         const scoped = row.role === ROLES.DIRECTOR || row.role === ROLES.RM
@@ -219,7 +226,7 @@ export default function UsersPage() {
           </Tooltip>
         )
       },
-    },
+    }] : []),
     {
       field: 'created_at', headerName: 'Регистрация', width: 150,
       valueFormatter: (value) => value ? new Date(value).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
@@ -227,18 +234,22 @@ export default function UsersPage() {
   ]
 
   return (
-    <RoleGuard permission="canManageUsers">
+    <RoleGuard permission="canViewUsers">
       <Box>
         <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="h5" sx={{ mb: 0.25 }}>Пользователи и доступы</Typography>
+            <Typography variant="h5" sx={{ mb: 0.25 }}>{isAdmin ? 'Пользователи и доступы' : 'Мой профиль'}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Роль определяет права; для <b>Директора</b> и <b>РМ</b> задайте магазины/регионы кнопкой <TuneIcon sx={{ fontSize: 14, verticalAlign: 'middle' }} />
+              {isAdmin
+                ? <>Роль определяет права; для <b>Директора</b> и <b>РМ</b> задайте магазины/регионы кнопкой <TuneIcon sx={{ fontSize: 14, verticalAlign: 'middle' }} /></>
+                : 'Двойной клик по «ФИО», чтобы изменить своё имя'}
             </Typography>
           </Box>
-          <Button variant="contained" size="small" startIcon={<PersonAddAlt1Icon />} onClick={() => setAddOpen(true)}>
-            Пользователь
-          </Button>
+          {isAdmin && (
+            <Button variant="contained" size="small" startIcon={<PersonAddAlt1Icon />} onClick={() => setAddOpen(true)}>
+              Пользователь
+            </Button>
+          )}
         </Box>
 
         {error && <Alert severity="warning" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>}

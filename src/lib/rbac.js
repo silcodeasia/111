@@ -24,6 +24,7 @@ const NONE = {
   canEdit: false,
   canDelete: false,
   canManageUsers: false,
+  canViewUsers: false,       // доступ к странице «Пользователи» (правка своего ФИО)
   canViewAdminFields: false,
   // HR / вакансии
   canViewStores: false,      // раздел «Магазины» (вакансии по магазину)
@@ -37,13 +38,13 @@ const NONE = {
 /** Что умеет каждая роль */
 export const PERMISSIONS = {
   [ROLES.ADMIN]: {
-    canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canViewAdminFields: true,
+    canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canViewUsers: true, canViewAdminFields: true,
     canViewStores: true, canEditVacancies: true, canViewPlan: true, canViewRegion: true, canManageHr: true,
     canManageStaffing: true,
   },
   [ROLES.EDITOR]: { ...NONE, canCreate: true, canEdit: true },
   [ROLES.VIEWER]: { ...NONE },
-  [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true },
+  [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true, canViewUsers: true },
   [ROLES.RM]: { ...NONE, canViewRegion: true },
   [ROLES.HR]: { ...NONE, canViewStores: true, canManageHr: true, canManageStaffing: true },
 }
