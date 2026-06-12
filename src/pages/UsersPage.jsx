@@ -22,7 +22,8 @@ function AddUserDialog({ onClose, onCreated, onError }) {
   const [saving, setSaving] = useState(false)
   const save = async () => {
     setSaving(true)
-    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+    // слаг задеплоенной функции (Supabase создал её под автоименем swift-api)
+    const { data, error } = await supabase.functions.invoke('swift-api', {
       body: { email: email.trim(), password, role },
     })
     setSaving(false)
