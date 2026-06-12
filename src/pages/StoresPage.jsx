@@ -128,7 +128,7 @@ export default function StoresPage() {
   )
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
         <StorefrontOutlinedIcon sx={{ color: 'primary.main' }} />
         <Box>
@@ -155,16 +155,15 @@ export default function StoresPage() {
         )}
       </Paper>
 
-      <Paper sx={{ height: 560 }}>
+      <Paper sx={{ flex: 1, minHeight: 0 }}>
         <DataGrid
           rows={rows}
           columns={cols}
           loading={loading || storesLoading}
           processRowUpdate={editable ? processRowUpdate : undefined}
           onProcessRowUpdateError={(err) => toast(err.message, 'error')}
+          autoPageSize
           disableRowSelectionOnClick
-          pageSizeOptions={[25, 50, 100]}
-          initialState={{ pagination: { paginationModel: { pageSize: 50 } } }}
           slots={{ toolbar: Toolbar }}
           sx={{
             border: 'none',
@@ -172,6 +171,7 @@ export default function StoresPage() {
             '& .g-a': { backgroundColor: 'rgba(62,207,142,0.06)' },
             '& .g-b': { backgroundColor: 'rgba(56,132,255,0.09)' },
             '& .g-c': { backgroundColor: 'rgba(251,191,36,0.08)' },
+            '& .MuiDataGrid-cell--editable': { color: 'primary.main' },
           }}
         />
       </Paper>

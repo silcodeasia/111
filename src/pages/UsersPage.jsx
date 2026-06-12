@@ -235,7 +235,7 @@ export default function UsersPage() {
 
   return (
     <RoleGuard permission="canViewUsers">
-      <Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         <Box sx={{ mb: 2.5, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
           <Box sx={{ flex: 1 }}>
             <Typography variant="h5" sx={{ mb: 0.25 }}>{isAdmin ? 'Пользователи и доступы' : 'Мой профиль'}</Typography>
@@ -254,17 +254,16 @@ export default function UsersPage() {
 
         {error && <Alert severity="warning" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>}
 
-        <Paper sx={{ height: 540 }}>
+        <Paper sx={{ flex: 1, minHeight: 0 }}>
           <DataGrid
             rows={users}
             columns={columns}
             loading={loading}
             processRowUpdate={handleRowUpdate}
             onProcessRowUpdateError={(err) => toast(err.message, 'error')}
+            autoPageSize
             disableRowSelectionOnClick
-            pageSizeOptions={[25, 50]}
-            initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
-            sx={{ border: 'none' }}
+            sx={{ border: 'none', '& .MuiDataGrid-cell--editable': { color: 'primary.main' } }}
           />
         </Paper>
 

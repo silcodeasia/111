@@ -97,7 +97,7 @@ export default function AppLayout({ children }) {
   const items = NAV_ITEMS.filter(item => !item.permission || can(role, item.permission))
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
       {/* ── Sidebar ── */}
       <Drawer
         variant="permanent"
@@ -187,8 +187,8 @@ export default function AppLayout({ children }) {
       </Drawer>
 
       {/* ── Main ── */}
-      <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <Box sx={{ flex: 1, p: 3, overflow: 'auto' }}>
+      <Box component="main" sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
+        <Box sx={{ flex: 1, p: 3, overflow: 'auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           {children}
         </Box>
       </Box>

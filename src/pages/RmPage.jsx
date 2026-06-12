@@ -132,7 +132,7 @@ export default function RmPage() {
   ]
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
         <MapOutlinedIcon sx={{ color: 'primary.main' }} />
         <Box>
@@ -157,14 +157,13 @@ export default function RmPage() {
         )}
       </Paper>
 
-      <Paper sx={{ height: 560 }}>
+      <Paper sx={{ flex: 1, minHeight: 0 }}>
         <DataGrid
           rows={gridRows}
           columns={columns}
           loading={sLoading || stLoading}
+          autoPageSize
           disableRowSelectionOnClick
-          pageSizeOptions={[25, 50, 100]}
-          initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
           sx={{ border: 'none' }}
         />
       </Paper>

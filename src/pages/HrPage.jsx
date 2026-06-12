@@ -36,7 +36,7 @@ export default function HrPage() {
   ]
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
         <BadgeOutlinedIcon sx={{ color: 'primary.main' }} />
         <Box>
@@ -49,14 +49,13 @@ export default function HrPage() {
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <Paper sx={{ height: 560 }}>
+      <Paper sx={{ flex: 1, minHeight: 0 }}>
         <DataGrid
           rows={rows}
           columns={columns}
           loading={loading}
+          autoPageSize
           disableRowSelectionOnClick
-          pageSizeOptions={[25, 50, 100]}
-          initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
           slots={{
             noRowsOverlay: () => (
               <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, color: 'text.disabled' }}>

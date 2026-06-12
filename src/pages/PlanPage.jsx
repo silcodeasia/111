@@ -159,7 +159,7 @@ export default function PlanPage() {
   ]
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
         <AssessmentOutlinedIcon sx={{ color: 'primary.main' }} />
         <Box>
@@ -187,7 +187,7 @@ export default function PlanPage() {
         <Stat label="Укомпл." value={`${totals.ukompl}%`} color={totals.ukompl < 90 ? 'error.main' : 'success.main'} />
       </Box>
 
-      <Paper sx={{ height: 600 }}>
+      <Paper sx={{ flex: 1, minHeight: 0 }}>
         <DataGrid
           apiRef={apiRef}
           onStateChange={syncView}
@@ -195,9 +195,8 @@ export default function PlanPage() {
           columns={columns}
           columnGroupingModel={columnGroupingModel}
           loading={sLoading || stLoading}
+          autoPageSize
           disableRowSelectionOnClick
-          pageSizeOptions={[25, 50, 100]}
-          initialState={{ pagination: { paginationModel: { pageSize: 50 } } }}
           slots={{ toolbar: Toolbar }}
           sx={{
             border: 'none',

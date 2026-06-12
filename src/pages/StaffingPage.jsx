@@ -167,7 +167,7 @@ export default function StaffingPage() {
   )
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <input ref={fileRef} type="file" accept=".xlsx,.xls" hidden onChange={ev => handleUpload(ev.target.files?.[0])} />
 
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
@@ -187,7 +187,7 @@ export default function StaffingPage() {
         </Alert>
       )}
 
-      <Paper sx={{ height: 620 }}>
+      <Paper sx={{ flex: 1, minHeight: 0 }}>
         <DataGrid
           rows={gridRows}
           columns={columns}
@@ -195,11 +195,10 @@ export default function StaffingPage() {
           loading={loading}
           processRowUpdate={handleRowUpdate}
           onProcessRowUpdateError={(err) => toast(err.message, 'error')}
+          autoPageSize
           disableRowSelectionOnClick
-          pageSizeOptions={[25, 50, 100]}
-          initialState={{ pagination: { paginationModel: { pageSize: 50 } } }}
           slots={{ toolbar: Toolbar }}
-          sx={{ border: 'none', '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 600 } }}
+          sx={{ border: 'none', '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 600 }, '& .MuiDataGrid-cell--editable': { color: 'primary.main' } }}
         />
       </Paper>
 
