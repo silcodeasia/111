@@ -51,7 +51,7 @@ function AddDialog({ stores, onClose, onAdd }) {
 }
 
 export default function StaffingPage() {
-  const { rows, zupOf, loading, error, clearError, processRowUpdate, add, remove, replaceReport } = useStaffing()
+  const { rows, zupOf, planOf, loading, error, clearError, processRowUpdate, add, remove, replaceReport } = useStaffing()
   const { stores } = useStores()
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
   const [addOpen, setAddOpen] = useState(false)
@@ -69,9 +69,9 @@ export default function StaffingPage() {
     const zup = zupOf(s.store_id, s.position)
     const rabotaet = zup + num(s.neof) + num(s.stazhirovka)
     const fakt = Math.max(num(s.shtat) - rabotaet, 0)
-    const vsego = fakt + num(s.plan)
-    return { ...s, storeName: s.store?.name ?? '—', zup, rabotaet, fakt, vsego }
-  }), [rows, zupOf])
+    const plan = planOf(s.store_id, s.position)
+    return { ...s, storeName: s.store?.name ?? '—', zup, rabotaet, fakt, plan, vsego: fakt + plan }
+  }), [rows, zupOf, planOf])
 
   const handleUpload = async (file) => {
     if (!file) return
@@ -129,7 +129,7 @@ export default function StaffingPage() {
     { field: 'stazhirovka', headerName: 'Стаж', ...n(75, e) },
     { field: 'rabotaet', headerName: 'Работает', ...n(90), description: 'ЗУП+НЕОФ+Стаж' },
     { field: 'fakt', headerName: 'Факт ваканс.', ...n(110), description: 'Штат−Работает' },
-    { field: 'plan', headerName: 'План', ...n(75, e) },
+    { field: 'plan', headerName: 'План', ...n(75), description: 'Из «Вакансий» магазина (тип = должность)' },
     { field: 'opened_date', headerName: 'Дата открытия', width: 130, editable: e },
     { field: 'vsego', headerName: 'Всего ваканс.', ...n(110), description: 'Факт+План' },
     {

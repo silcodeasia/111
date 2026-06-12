@@ -11,29 +11,43 @@ const SELECT = '*, store:stores(id, name, code, region:regions(code))'
 export function useStaffing() {
   const [rows, setRows] = useState([])
   const [zupMap, setZupMap] = useState(new Map())
+  const [planMap, setPlanMap] = useState(new Map())       // store|тип → qty
+  const [planStoreMap, setPlanStoreMap] = useState(new Map()) // store → Σ qty
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const fetchAll = useCallback(async () => {
     setLoading(true); setError(null)
-    const [s, r] = await Promise.all([
+    const [s, r, v] = await Promise.all([
       supabase.from('staffing').select(SELECT).order('store_id').order('position'),
       supabase.from('report').select('store_id, dolzhnost'),
+      supabase.from('vacancies').select('store_id, vacancy_type, qty'),
     ])
     if (s.error) setError(s.error.message)
     else setRows(s.data ?? [])
-    const m = new Map()
+
+    const zm = new Map()
     for (const row of (r.data ?? [])) {
       const k = `${row.store_id}|${norm(row.dolzhnost)}`
-      m.set(k, (m.get(k) || 0) + 1)
+      zm.set(k, (zm.get(k) || 0) + 1)
     }
-    setZupMap(m)
+    setZupMap(zm)
+
+    const pm = new Map(), psm = new Map()
+    for (const row of (v.data ?? [])) {
+      const k = `${row.store_id}|${norm(row.vacancy_type)}`
+      pm.set(k, (pm.get(k) || 0) + (row.qty || 0))
+      psm.set(row.store_id, (psm.get(row.store_id) || 0) + (row.qty || 0))
+    }
+    setPlanMap(pm); setPlanStoreMap(psm)
     setLoading(false)
   }, [])
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
   const zupOf = useCallback((storeId, position) => zupMap.get(`${storeId}|${norm(position)}`) ?? 0, [zupMap])
+  const planOf = useCallback((storeId, position) => planMap.get(`${storeId}|${norm(position)}`) ?? 0, [planMap])
+  const planByStore = useCallback((storeId) => planStoreMap.get(storeId) ?? 0, [planStoreMap])
 
   const update = async (id, values) => {
     const patch = {
@@ -42,8 +56,8 @@ export function useStaffing() {
       shtat: values.shtat ?? 0,
       neof: values.neof ?? 0,
       stazhirovka: values.stazhirovka ?? 0,
-      plan: values.plan ?? 0,
       opened_date: values.opened_date ?? null,
+      // plan не пишем — он считается из «Вакансий»
     }
     const { data, error } = await supabase.from('staffing').update(patch).eq('id', id).select(SELECT).single()
     if (error) throw error
@@ -81,5 +95,5 @@ export function useStaffing() {
   const processRowUpdate = async (newRow) => update(newRow.id, newRow)
   const clearError = useCallback(() => setError(null), [])
 
-  return { rows, zupOf, loading, error, clearError, refetch: fetchAll, update, add, remove, replaceReport, processRowUpdate }
+  return { rows, zupOf, planOf, planByStore, loading, error, clearError, refetch: fetchAll, update, add, remove, replaceReport, processRowUpdate }
 }

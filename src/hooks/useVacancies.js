@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 /**
- * Вакансии. RLS сам ограничивает выборку по роли/скоупу:
- *   admin/hr — все; director/rm — доступные магазины.
+ * Упрощённые «Вакансии»: магазин × тип вакансии × количество.
+ * RLS: читают admin/hr/скоуп; пишет директор (свой магазин) / hr / admin.
  * @param {object} opts
- * @param {number} [opts.storeId] — фильтр по конкретному магазину (для формы магазина)
+ * @param {number} [opts.storeId] — фильтр по магазину
  */
 export function useVacancies({ storeId } = {}) {
   const [rows, setRows] = useState([])
@@ -13,12 +13,11 @@ export function useVacancies({ storeId } = {}) {
   const [error, setError] = useState(null)
 
   const fetch = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     let query = supabase
       .from('vacancies')
       .select('*, store:stores(id, name, code)')
-      .order('id', { ascending: true })
+      .order('vacancy_type')
     if (storeId != null) query = query.eq('store_id', storeId)
     const { data, error } = await query
     if (error) setError(error.message)
@@ -28,23 +27,35 @@ export function useVacancies({ storeId } = {}) {
 
   useEffect(() => { fetch() }, [fetch])
 
-  const update = async (id, values) => {
-    // id — generated always as identity; store-join и системные поля не шлём
-    const { id: _id, created_at: _c, updated_at: _u, store: _s, ...patch } = values
+  const add = async ({ store_id, vacancy_type, qty }) => {
     const { data, error } = await supabase
       .from('vacancies')
-      .update(patch)
-      .eq('id', id)
+      .insert([{ store_id, vacancy_type, qty: qty ?? 1 }])
       .select('*, store:stores(id, name, code)')
       .single()
+    if (error) throw error
+    setRows(prev => [...prev, data])
+    return data
+  }
+
+  const update = async (id, values) => {
+    const patch = { vacancy_type: values.vacancy_type, qty: values.qty }
+    const { data, error } = await supabase
+      .from('vacancies').update(patch).eq('id', id)
+      .select('*, store:stores(id, name, code)').single()
     if (error) throw error
     setRows(prev => prev.map(r => r.id === id ? data : r))
     return data
   }
 
-  const processRowUpdate = async (newRow) => update(newRow.id, newRow)
+  const remove = async (id) => {
+    const { error } = await supabase.from('vacancies').delete().eq('id', id)
+    if (error) throw error
+    setRows(prev => prev.filter(r => r.id !== id))
+  }
 
+  const processRowUpdate = async (newRow) => update(newRow.id, newRow)
   const clearError = useCallback(() => setError(null), [])
 
-  return { rows, loading, error, clearError, refetch: fetch, update, processRowUpdate }
+  return { rows, loading, error, clearError, refetch: fetch, add, update, remove, processRowUpdate }
 }
