@@ -4,15 +4,16 @@
 -- ============================================================
 
 -- 1. Переименование роли hr → recruiter
--- Триггер protect_profile_role откатывает смену роли вне admin-контекста
--- (в SQL Editor auth.uid() = null), поэтому на время миграции отключаем его.
+-- Порядок важен: сначала снимаем СТАРЫЙ constraint (в нём ещё нет 'recruiter',
+-- и update в 'recruiter' его нарушил бы). Триггер protect_profile_role
+-- откатывает смену роли вне admin-контекста (в SQL Editor auth.uid()=null) —
+-- отключаем его на время миграции.
 alter table profiles disable trigger profiles_protect_role;
-update profiles set role = 'recruiter' where role = 'hr';
-alter table profiles enable trigger profiles_protect_role;
-
 alter table profiles drop constraint if exists profiles_role_check;
+update profiles set role = 'recruiter' where role = 'hr';
 alter table profiles add constraint profiles_role_check
   check (role in ('admin','editor','viewer','director','rm','recruiter'));
+alter table profiles enable trigger profiles_protect_role;
 
 -- 2. Закрепление рекрутер ↔ магазин (один магазин — у нескольких рекрутеров)
 create table if not exists recruiter_stores (
