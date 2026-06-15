@@ -14,7 +14,7 @@ const normName = (s) => String(s ?? '').toLowerCase().replace(/ё/g, 'е').repla
 export default function StoresPage() {
   const { role, storeIds, regionIds, recruiterStoreIds } = useAuth()
   const { stores, loading: storesLoading } = useStores()
-  const editable = ['admin', 'director'].includes(role) // РМ и рекрутер — только просмотр
+  const editable = ['admin', 'director', 'rm'].includes(role) // рекрутер — только просмотр
 
   const myStores = useMemo(() => {
     if (role === 'admin') return stores
