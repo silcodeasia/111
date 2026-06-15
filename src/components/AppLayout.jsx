@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { label: 'Штатное расписание', icon: ListAltOutlinedIcon, path: '/staffing', permission: 'canManageStaffing' },
   { label: 'РМ · регион', icon: MapOutlinedIcon, path: '/rm', permission: 'canViewRegion' },
   { label: 'Магазины', icon: StorefrontOutlinedIcon, path: '/stores', permission: 'canViewStores' },
-  { label: 'HR', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
+  { label: 'Рекрутеры', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
   { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canViewUsers' },
 ]
 

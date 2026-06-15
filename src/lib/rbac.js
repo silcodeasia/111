@@ -14,7 +14,7 @@ export const ROLES = {
   VIEWER: 'viewer',
   DIRECTOR: 'director',
   RM: 'rm',
-  HR: 'hr',
+  RECRUITER: 'recruiter',
 }
 
 // Полный набор прав с дефолтом false — чтобы новые ключи не «протекали».
@@ -31,7 +31,7 @@ const NONE = {
   canEditVacancies: false,   // редактирование вакансий
   canViewPlan: false,        // сводный «План»
   canViewRegion: false,      // раздел «РМ» (магазины региона)
-  canManageHr: false,        // раздел «HR» (назначения)
+  canManageHr: false,        // раздел «Рекрутеры» (закрепление магазинов)
   canManageStaffing: false,  // раздел «Штатное расписание» + загрузка отчёта
 }
 
@@ -46,7 +46,8 @@ export const PERMISSIONS = {
   [ROLES.VIEWER]: { ...NONE },
   [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true, canViewUsers: true },
   [ROLES.RM]: { ...NONE, canViewRegion: true },
-  [ROLES.HR]: { ...NONE, canViewStores: true, canManageHr: true, canManageStaffing: true },
+  // Рекрутер: только чтение «Сводного плана» (свои магазины) + своё ФИО
+  [ROLES.RECRUITER]: { ...NONE, canViewPlan: true, canViewUsers: true },
 }
 
 /** Хук-помощник: can(role, 'canEdit') */
@@ -60,5 +61,5 @@ export const ROLE_META = {
   [ROLES.VIEWER]: { label: 'Viewer', color: 'default' },
   [ROLES.DIRECTOR]: { label: 'Директор', color: 'success' },
   [ROLES.RM]: { label: 'РМ', color: 'primary' },
-  [ROLES.HR]: { label: 'HR', color: 'secondary' },
+  [ROLES.RECRUITER]: { label: 'Рекрутер', color: 'secondary' },
 }

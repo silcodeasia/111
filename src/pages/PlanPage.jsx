@@ -5,6 +5,8 @@ import {
   DataGrid, GridToolbarContainer, GridToolbarQuickFilter, GridToolbarExport, GridToolbarColumnsButton,
   useGridApiRef, gridFilteredSortedRowEntriesSelector,
 } from '@mui/x-data-grid'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { useStores } from '../hooks/useStores'
 import { useStaffing } from '../hooks/useStaffing'
 
@@ -43,8 +45,33 @@ function Toolbar() {
 }
 
 export default function PlanPage() {
+  const { role, recruiterStoreIds } = useAuth()
   const { stores, loading: sLoading, error } = useStores()
   const { rows: staffing, loading: stLoading } = useStaffing()
+
+  // рекрутер видит только свои закреплённые магазины
+  const visibleStores = useMemo(
+    () => (role === 'recruiter' ? stores.filter(s => recruiterStoreIds.includes(s.id)) : stores),
+    [stores, role, recruiterStoreIds],
+  )
+
+  // карта магазин → ФИО рекрутеров (для колонки «Рекрутер»)
+  const [recruiterByStore, setRecruiterByStore] = useState(new Map())
+  useEffect(() => {
+    let active = true
+    supabase.from('recruiter_stores').select('store_id, recruiter:profiles(name, email)')
+      .then(({ data }) => {
+        if (!active) return
+        const m = new Map()
+        for (const r of (data ?? [])) {
+          const nm = r.recruiter?.name || r.recruiter?.email
+          if (!nm) continue
+          m.set(r.store_id, [...(m.get(r.store_id) ?? []), nm])
+        }
+        setRecruiterByStore(m)
+      })
+    return () => { active = false }
+  }, [])
 
   const rows = useMemo(() => {
     const empty = () => ({ shtat: 0, zup: 0, neof: 0, stazh: 0, fakt: 0, aup: 0, gruzchiki: 0, dopek: 0, lineyka: 0 })
@@ -62,12 +89,12 @@ export default function PlanPage() {
       else if (c.includes('линейк')) a.lineyka += faktRow
       agg.set(s.store_id, a)
     }
-    return stores.map((st, i) => {
+    return visibleStores.map((st, i) => {
       const a = agg.get(st.id) ?? empty()
       const itogo = a.zup + a.neof + a.stazh
       const ukompl = a.shtat > 0 ? (itogo / a.shtat) * 100 : 0
       return {
-        id: st.id, n: i + 1, store: st.name, recruiter: '—',
+        id: st.id, n: i + 1, store: st.name, recruiter: (recruiterByStore.get(st.id) ?? []).join(', ') || '—',
         rm: st.region?.rm?.name ?? st.region?.name ?? st.region?.code ?? '—',
         dm: st.director?.name ?? st.dm_name ?? '—',
         shtat: r1(a.shtat), zup: r1(a.zup), neof: r1(a.neof), stazh: r1(a.stazh), itogo: r1(itogo),
@@ -75,7 +102,7 @@ export default function PlanPage() {
         nehvatka: Math.round(100 - ukompl), ukompl: Math.round(ukompl),
       }
     })
-  }, [staffing, stores])
+  }, [staffing, visibleStores, recruiterByStore])
 
   // Отфильтрованные строки грида → виджеты пересчитываются по фильтру
   const apiRef = useGridApiRef()

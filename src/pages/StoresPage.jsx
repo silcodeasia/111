@@ -14,10 +14,10 @@ const normName = (s) => String(s ?? '').toLowerCase().replace(/ё/g, 'е').repla
 export default function StoresPage() {
   const { role, storeIds, regionIds } = useAuth()
   const { stores, loading: storesLoading } = useStores()
-  const editable = ['admin', 'hr', 'director'].includes(role)
+  const editable = ['admin', 'director'].includes(role)
 
   const myStores = useMemo(() => {
-    if (role === 'admin' || role === 'hr') return stores
+    if (role === 'admin') return stores
     if (role === 'director') return stores.filter(s => storeIds.includes(s.id))
     if (role === 'rm') return stores.filter(s => regionIds.includes(s.region_id))
     return []

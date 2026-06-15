@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(ROLES.VIEWER)
   const [storeIds, setStoreIds] = useState([])   // скоуп директора (user_stores)
   const [regionIds, setRegionIds] = useState([]) // скоуп РМ (user_regions)
+  const [recruiterStoreIds, setRecruiterStoreIds] = useState([]) // скоуп рекрутера
   const [authResolved, setAuthResolved] = useState(false)
   const [roleLoading, setRoleLoading] = useState(true)
 
@@ -38,6 +39,7 @@ export function AuthProvider({ children }) {
       setRole(ROLES.VIEWER)
       setStoreIds([])
       setRegionIds([])
+      setRecruiterStoreIds([])
       setRoleLoading(false)
       return
     }
@@ -48,11 +50,13 @@ export function AuthProvider({ children }) {
       supabase.from('profiles').select('role').eq('id', userId).single(),
       supabase.from('user_stores').select('store_id').eq('user_id', userId),
       supabase.from('user_regions').select('region_id').eq('user_id', userId),
-    ]).then(([roleRes, storesRes, regionsRes]) => {
+      supabase.from('recruiter_stores').select('store_id').eq('recruiter_id', userId),
+    ]).then(([roleRes, storesRes, regionsRes, recruiterRes]) => {
       if (!active) return
       setRole(roleRes.data?.role ?? ROLES.VIEWER)
       setStoreIds((storesRes.data ?? []).map(r => r.store_id))
       setRegionIds((regionsRes.data ?? []).map(r => r.region_id))
+      setRecruiterStoreIds((recruiterRes.data ?? []).map(r => r.store_id))
       setRoleLoading(false)
     })
 
@@ -77,7 +81,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, loading, role, storeIds, regionIds, signIn, signInWithGitHub, signOut }}>
+    <AuthContext.Provider value={{ session, loading, role, storeIds, regionIds, recruiterStoreIds, signIn, signInWithGitHub, signOut }}>
       {children}
     </AuthContext.Provider>
   )
