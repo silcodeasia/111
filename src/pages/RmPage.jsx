@@ -1,12 +1,13 @@
 import { useMemo, useState, useEffect } from 'react'
 import {
   Box, Paper, Typography, Alert, Chip, Snackbar, Button, IconButton, Tooltip,
-  FormControl, InputLabel, Select, MenuItem, TextField,
+  FormControl, InputLabel, Select, MenuItem, TextField, Autocomplete,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
 } from '@mui/material'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import { DataGrid } from '@mui/x-data-grid'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
@@ -60,6 +61,83 @@ function AddStoreDialog({ regionId, regionLabel, allStores, onClose, onAdded, on
   )
 }
 
+/** Редактирование магазина: название, регион (=РМ), директор (admin) */
+function EditStoreDialog({ store, regionOptions, isAdmin, onClose, onSaved, onError }) {
+  const [name, setName] = useState(store.name ?? '')
+  const [regionId, setRegionId] = useState(store.region_id ?? '')
+  const [directors, setDirectors] = useState([])
+  const [director, setDirector] = useState(null)
+  const [loading, setLoading] = useState(isAdmin)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!isAdmin) return
+    let active = true
+    supabase.from('profiles').select('id, name, email').eq('role', 'director').order('name')
+      .then(({ data }) => {
+        if (!active) return
+        const list = data ?? []
+        setDirectors(list)
+        setDirector(list.find(d => d.id === store.director_id) ?? null)
+        setLoading(false)
+      })
+    return () => { active = false }
+  }, [isAdmin, store.director_id])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const patch = { name: name.trim(), region_id: regionId || null }
+      if (isAdmin) {
+        patch.director_id = director?.id ?? null
+        patch.dm_name = director ? (director.name ?? director.email) : null
+      }
+      const upd = await supabase.from('stores').update(patch).eq('id', store.id)
+      if (upd.error) throw upd.error
+      // синхронизация скоупа директора (user_stores) при смене
+      if (isAdmin && (director?.id ?? null) !== (store.director_id ?? null)) {
+        if (store.director_id) {
+          const d = await supabase.from('user_stores').delete().eq('user_id', store.director_id).eq('store_id', store.id)
+          if (d.error) throw d.error
+        }
+        if (director?.id) {
+          const i = await supabase.from('user_stores').upsert({ user_id: director.id, store_id: store.id })
+          if (i.error) throw i.error
+        }
+      }
+      onSaved()
+    } catch (e) {
+      onError(e.message ?? 'Ошибка сохранения')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ fontSize: '1rem' }}>Редактировать магазин{store.code ? ` · ${store.code}` : ''}</DialogTitle>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <TextField label="Название" value={name} onChange={e => setName(e.target.value)} required fullWidth sx={{ mt: 1 }} />
+        <TextField label="Регион (РМ)" value={regionId} onChange={e => setRegionId(e.target.value)} select fullWidth helperText="РМ определяется регионом">
+          {regionOptions.map(r => <MenuItem key={r.id} value={r.id}>{r.code}{(r.rm?.name ?? r.name) ? ` — ${r.rm?.name ?? r.name}` : ''}</MenuItem>)}
+        </TextField>
+        {isAdmin && (
+          <Autocomplete
+            options={directors} value={director} loading={loading}
+            onChange={(_, v) => setDirector(v)}
+            getOptionLabel={d => d.name || d.email || ''}
+            isOptionEqualToValue={(o, v) => o.id === v.id}
+            renderInput={p => <TextField {...p} label="Директор" placeholder="Не назначен" />}
+          />
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 2.5, pb: 2 }}>
+        <Button onClick={onClose} variant="outlined" size="small">Отмена</Button>
+        <Button onClick={save} variant="contained" size="small" disabled={saving || !name.trim() || !regionId}>Сохранить</Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
+
 export default function RmPage() {
   const { role, regionIds } = useAuth()
   const { stores, regions, loading: sLoading, error, refetch } = useStores()
@@ -74,7 +152,10 @@ export default function RmPage() {
   useEffect(() => { if (regionId === '' && myRegions.length) setRegionId(myRegions[0].id) }, [myRegions, regionId])
 
   const canManage = role === 'admin' || role === 'rm'
+  const isAdmin = role === 'admin'
+  const regionOptions = isAdmin ? regions : myRegions
   const [addOpen, setAddOpen] = useState(false)
+  const [editStore, setEditStore] = useState(null)
   const [delStore, setDelStore] = useState(null)
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' })
   const toast = (message, severity = 'success') => setSnack({ open: true, message, severity })
@@ -120,13 +201,20 @@ export default function RmPage() {
       renderCell: ({ value }) => <Typography sx={{ fontWeight: value < 90 ? 700 : 400, color: value < 90 ? 'error.main' : 'success.main' }}>{value}%</Typography>,
     },
     ...(canManage ? [{
-      field: '__act', headerName: '', width: 50, sortable: false, filterable: false,
+      field: '__act', headerName: '', width: 86, sortable: false, filterable: false,
       renderCell: ({ row }) => (
-        <Tooltip title="Удалить магазин">
-          <IconButton size="small" onClick={() => setDelStore(row)} sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
-            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex' }}>
+          <Tooltip title="Редактировать">
+            <IconButton size="small" onClick={() => setEditStore(stores.find(s => s.id === row.id))} sx={{ color: 'text.disabled', '&:hover': { color: 'primary.main' } }}>
+              <EditOutlinedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить магазин">
+            <IconButton size="small" onClick={() => setDelStore(row)} sx={{ color: 'text.disabled', '&:hover': { color: 'error.main' } }}>
+              <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+          </Tooltip>
+        </Box>
       ),
     }] : []),
   ]
@@ -175,6 +263,17 @@ export default function RmPage() {
           onClose={() => setAddOpen(false)}
           onError={(m) => toast(m, 'error')}
           onAdded={() => { setAddOpen(false); toast('Магазин добавлен'); refetch() }}
+        />
+      )}
+
+      {editStore && (
+        <EditStoreDialog
+          store={editStore}
+          regionOptions={regionOptions}
+          isAdmin={isAdmin}
+          onClose={() => setEditStore(null)}
+          onError={(m) => toast(m, 'error')}
+          onSaved={() => { setEditStore(null); toast('Магазин обновлён'); refetch() }}
         />
       )}
 
