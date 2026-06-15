@@ -12,16 +12,17 @@ const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : Number(x) 
 const normName = (s) => String(s ?? '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim()
 
 export default function StoresPage() {
-  const { role, storeIds, regionIds } = useAuth()
+  const { role, storeIds, regionIds, recruiterStoreIds } = useAuth()
   const { stores, loading: storesLoading } = useStores()
-  const editable = ['admin', 'director'].includes(role)
+  const editable = ['admin', 'director'].includes(role) // РМ и рекрутер — только просмотр
 
   const myStores = useMemo(() => {
     if (role === 'admin') return stores
     if (role === 'director') return stores.filter(s => storeIds.includes(s.id))
     if (role === 'rm') return stores.filter(s => regionIds.includes(s.region_id))
+    if (role === 'recruiter') return stores.filter(s => recruiterStoreIds.includes(s.id))
     return []
-  }, [stores, role, storeIds, regionIds])
+  }, [stores, role, storeIds, regionIds, recruiterStoreIds])
 
   const [storeId, setStoreId] = useState('')
   useEffect(() => { if (storeId === '' && myStores.length) setStoreId(myStores[0].id) }, [myStores, storeId])

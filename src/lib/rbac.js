@@ -45,9 +45,9 @@ export const PERMISSIONS = {
   [ROLES.EDITOR]: { ...NONE, canCreate: true, canEdit: true },
   [ROLES.VIEWER]: { ...NONE },
   [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true, canViewUsers: true },
-  [ROLES.RM]: { ...NONE, canViewRegion: true },
-  // Рекрутер: только чтение «Сводного плана» (свои магазины) + своё ФИО
-  [ROLES.RECRUITER]: { ...NONE, canViewPlan: true, canViewUsers: true },
+  [ROLES.RM]: { ...NONE, canViewRegion: true, canViewStores: true },
+  // Рекрутер: чтение «Сводного плана» и «Магазинов» (свои), + своё ФИО
+  [ROLES.RECRUITER]: { ...NONE, canViewPlan: true, canViewUsers: true, canViewStores: true },
 }
 
 /** Хук-помощник: can(role, 'canEdit') */
