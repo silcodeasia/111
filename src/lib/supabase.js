@@ -10,7 +10,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
+// В проде обращаемся к Supabase через собственный домен (прокси `/sb` в vercel.json),
+// чтобы обойти блокировку *.supabase.co на сетях части пользователей (директоров).
+// Браузер видит только наш домен Vercel; в него уже ходит сам Vercel. В dev — напрямую.
+const baseUrl =
+  (typeof window !== 'undefined' && import.meta.env.PROD)
+    ? `${window.location.origin}/sb`
+    : (supabaseUrl ?? 'https://placeholder.supabase.co')
+
 export const supabase = createClient(
-  supabaseUrl ?? 'https://placeholder.supabase.co',
+  baseUrl,
   supabaseAnonKey ?? 'placeholder'
 )
