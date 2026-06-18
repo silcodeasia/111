@@ -5,6 +5,7 @@ import {
   Alert, CircularProgress,
 } from '@mui/material'
 import { useAuth } from '../context/AuthContext'
+import { BRAND, BRAND_INITIAL } from '../lib/brand'
 
 export default function LoginPage() {
   const { signIn } = useAuth()
@@ -49,9 +50,9 @@ export default function LoginPage() {
               bgcolor: 'error.main', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Т</Typography>
+            <Typography sx={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{BRAND_INITIAL}</Typography>
           </Box>
-          <Typography sx={{ fontSize: 16, fontWeight: 600 }}>Toimart</Typography>
+          <Typography sx={{ fontSize: 16, fontWeight: 600 }}>{BRAND}</Typography>
         </Box>
 
         <Typography variant="h5" sx={{ mb: 0.5, fontSize: '1.15rem' }}>Войти в систему</Typography>

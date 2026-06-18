@@ -14,6 +14,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import CircleIcon from '@mui/icons-material/Circle'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
+import { BRAND, BRAND_INITIAL } from '../lib/brand'
 import { useAuth } from '../context/AuthContext'
 import { can, ROLE_META } from '../lib/rbac'
 
@@ -124,11 +125,11 @@ export default function AppLayout({ children }) {
         <Box sx={{ px: expanded ? 2 : 0, py: 2, display: 'flex', alignItems: 'center', gap: 1.25, justifyContent: expanded ? 'space-between' : 'center', minHeight: 64 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
             <Box sx={{ width: 30, height: 30, flexShrink: 0, borderRadius: 1.5, bgcolor: 'error.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1 }}>Т</Typography>
+              <Typography sx={{ fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{BRAND_INITIAL}</Typography>
             </Box>
             {expanded && (
               <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }} noWrap>Toimart</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2 }} noWrap>{BRAND}</Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
                   <CircleIcon sx={{ fontSize: 7, color: 'primary.main' }} />
                   <Typography sx={{ fontSize: 10, color: 'text.secondary', fontFamily: 'monospace' }}>подключено</Typography>
