@@ -7,6 +7,7 @@ import { DataGrid, GridToolbarContainer, GridToolbarQuickFilter } from '@mui/x-d
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useStores } from '../hooks/useStores'
+import { NEOF_LABEL } from '../lib/brand'
 
 const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : Number(x) || 0)
 const normName = (s) => String(s ?? '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim()
@@ -109,7 +110,7 @@ export default function StoresPage() {
     { field: 'category', headerName: 'Категория', width: 110 },
     { field: 'shtat', headerName: 'Штат', ...ne(70) },
     { field: 'zup', headerName: 'ЗУП', ...ne(70), description: 'Из отчёта' },
-    { field: 'neof', headerName: 'НЕОФ', ...ed(80) },
+    { field: 'neof', headerName: NEOF_LABEL, ...ed(80) },
     { field: 'stazhirovka', headerName: 'СТАЖ', ...ed(80) },
     { field: 'vsego', headerName: 'ВСЕГО', ...ne(80), description: 'ЗУП+НЕОФ+СТАЖ' },
     { field: 'fakt', headerName: 'Факт ваканс.', ...ne(110), description: 'Штат−ВСЕГО' },

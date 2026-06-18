@@ -8,6 +8,7 @@ import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import { DataGrid, GridToolbarContainer, GridToolbarQuickFilter, GridToolbarExport } from '@mui/x-data-grid'
+import { NEOF_LABEL } from '../lib/brand'
 import { supabase } from '../lib/supabase'
 import { useStaffing } from '../hooks/useStaffing'
 import { useStores } from '../hooks/useStores'
@@ -128,7 +129,7 @@ export default function StaffingPage() {
     { field: 'category', headerName: 'Категория', width: 120, editable: e, type: 'singleSelect', valueOptions: CATEGORIES },
     { field: 'shtat', headerName: 'Штат', ...n(80, e) },
     { field: 'zup', headerName: 'ЗУП', ...n(70), description: 'Из отчёта (count по магазину+должности)' },
-    { field: 'neof', headerName: 'НЕОФ', ...n(75, e) },
+    { field: 'neof', headerName: NEOF_LABEL, ...n(75, e) },
     { field: 'stazhirovka', headerName: 'Стаж', ...n(75, e) },
     { field: 'rabotaet', headerName: 'Работает', ...n(90), description: 'ЗУП+НЕОФ+Стаж' },
     { field: 'fakt', headerName: 'Факт ваканс.', ...n(110), description: 'Штат−Работает' },

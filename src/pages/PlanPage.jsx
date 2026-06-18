@@ -8,6 +8,7 @@ import {
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { useStores } from '../hooks/useStores'
+import { NEOF_LABEL } from '../lib/brand'
 import { useStaffing } from '../hooks/useStaffing'
 
 const num = (x) => (typeof x === 'number' && Number.isFinite(x) ? x : 0)
@@ -165,7 +166,7 @@ export default function PlanPage() {
     { field: 'dm', headerName: 'ДМ', width: 180 },
     { field: 'shtat', headerName: 'ШТАТ', ...n(80) },
     { field: 'zup', headerName: 'ЗУП', ...n(70) },
-    { field: 'neof', headerName: 'НЕОФ', ...n(70) },
+    { field: 'neof', headerName: NEOF_LABEL, ...n(70) },
     { field: 'stazh', headerName: 'СТАЖ', ...n(70) },
     { field: 'itogo', headerName: 'Работает', ...n(90) },
     { field: 'fakt', headerName: 'Вакансий', ...n(95) },
@@ -202,7 +203,7 @@ export default function PlanPage() {
       <Box sx={{ display: 'flex', gap: 0.75, mb: 2 }}>
         <Stat label="Штат" value={totals.shtat} bg={TINT.g1} />
         <Stat label="ЗУП" value={totals.zup} bg={TINT.g2} />
-        <Stat label="НЕОФ" value={totals.neof} bg={TINT.g2} />
+        <Stat label={NEOF_LABEL} value={totals.neof} bg={TINT.g2} />
         <Stat label="СТАЖ" value={totals.stazh} bg={TINT.g2} />
         <Stat label="Работает" value={totals.rabotaet} bg={TINT.g2} />
         <Stat label="Вакансий" value={totals.fakt} bg={TINT.g3} />
