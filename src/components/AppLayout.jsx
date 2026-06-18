@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText,
-  Typography, Avatar, Chip, Divider, Tooltip, IconButton,
+  Typography, Avatar, Chip, Divider, Tooltip, IconButton, Button,
 } from '@mui/material'
 import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline'
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined'
@@ -14,7 +14,8 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import CircleIcon from '@mui/icons-material/Circle'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined'
-import { BRAND, BRAND_INITIAL } from '../lib/brand'
+import { BRAND, BRAND_INITIAL, IS_DEMO } from '../lib/brand'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { can, ROLE_META } from '../lib/rbac'
 
@@ -184,6 +185,18 @@ export default function AppLayout({ children }) {
               </>
             )}
           </Box>
+          {IS_DEMO && expanded && (
+            <Button fullWidth size="small" variant="outlined" color="warning"
+              sx={{ mt: 1, fontSize: 11, textTransform: 'none' }}
+              onClick={async () => {
+                if (!window.confirm('Сбросить демо-данные к исходному состоянию?')) return
+                const { error } = await supabase.rpc('reset_demo')
+                alert(error ? ('Ошибка: ' + error.message) : 'Демо восстановлено')
+                if (!error) window.location.reload()
+              }}>
+              Сбросить демо
+            </Button>
+          )}
         </Box>
       </Drawer>
 
