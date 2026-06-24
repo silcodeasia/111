@@ -3,7 +3,7 @@
 // На /start регистрирует работника и даёт кнопку запуска Mini App.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const MINIAPP_URL = 'https://shtat360-rabota.pages.dev'
+const MINIAPP_URL = Deno.env.get('MINIAPP_URL') || 'https://shtat360-rabota.pages.dev'
 
 Deno.serve(async (req) => {
   try {

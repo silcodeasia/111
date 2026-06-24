@@ -3,7 +3,7 @@
 // Деплой: функция notify-new-offer, Verify JWT = OFF, секрет TG_BOT_TOKEN.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const MINIAPP_URL = 'https://shtat360-rabota.pages.dev'
+const MINIAPP_URL = Deno.env.get('MINIAPP_URL') || 'https://shtat360-rabota.pages.dev'
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } })
 
 Deno.serve(async (req) => {
