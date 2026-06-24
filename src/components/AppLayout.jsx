@@ -10,6 +10,7 @@ import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined'
 import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined'
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
 import CircleIcon from '@mui/icons-material/Circle'
 import PushPinIcon from '@mui/icons-material/PushPin'
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { label: 'Штатное расписание', icon: ListAltOutlinedIcon, path: '/staffing', permission: 'canManageStaffing' },
   { label: 'РМ · регион', icon: MapOutlinedIcon, path: '/rm', permission: 'canViewRegion' },
   { label: 'Магазины', icon: StorefrontOutlinedIcon, path: '/stores', permission: 'canViewStores' },
+  { label: 'Подработка (тестовый режим)', icon: EventAvailableOutlinedIcon, path: '/shifts', permission: 'canViewShifts' },
   { label: 'Рекрутеры', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
   { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canViewUsers' },
 ]

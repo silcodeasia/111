@@ -33,6 +33,7 @@ const NONE = {
   canViewRegion: false,      // раздел «РМ» (магазины региона)
   canManageHr: false,        // раздел «Рекрутеры» (закрепление магазинов)
   canManageStaffing: false,  // раздел «Штатное расписание» + загрузка отчёта
+  canViewShifts: false,      // раздел «Подработка (тестовый режим)»
 }
 
 /** Что умеет каждая роль */
@@ -40,12 +41,12 @@ export const PERMISSIONS = {
   [ROLES.ADMIN]: {
     canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canViewUsers: true, canViewAdminFields: true,
     canViewStores: true, canEditVacancies: true, canViewPlan: true, canViewRegion: true, canManageHr: true,
-    canManageStaffing: true,
+    canManageStaffing: true, canViewShifts: true,
   },
   [ROLES.EDITOR]: { ...NONE, canCreate: true, canEdit: true },
   [ROLES.VIEWER]: { ...NONE },
-  [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true, canViewUsers: true },
-  [ROLES.RM]: { ...NONE, canViewRegion: true, canViewStores: true },
+  [ROLES.DIRECTOR]: { ...NONE, canViewStores: true, canEditVacancies: true, canViewUsers: true, canViewShifts: true },
+  [ROLES.RM]: { ...NONE, canViewRegion: true, canViewStores: true, canViewShifts: true },
   // Рекрутер: чтение «Сводного плана» и «Магазинов» (свои), + своё ФИО
   [ROLES.RECRUITER]: { ...NONE, canViewPlan: true, canViewUsers: true, canViewStores: true },
 }

@@ -14,6 +14,7 @@ const PlanPage = lazy(() => import('./pages/PlanPage'))
 const StaffingPage = lazy(() => import('./pages/StaffingPage'))
 const RmPage = lazy(() => import('./pages/RmPage'))
 const HrPage = lazy(() => import('./pages/HrPage'))
+const ShiftsPage = lazy(() => import('./pages/ShiftsPage'))
 
 /** Центрированный спиннер — общий фолбэк для загрузки */
 function FullscreenLoader() {
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="/plan" element={<PrivateRoute><PlanPage /></PrivateRoute>} />
           <Route path="/staffing" element={<PrivateRoute><StaffingPage /></PrivateRoute>} />
           <Route path="/rm" element={<PrivateRoute><RmPage /></PrivateRoute>} />
+          <Route path="/shifts" element={<PrivateRoute><ShiftsPage /></PrivateRoute>} />
           <Route path="/hr" element={<PrivateRoute><HrPage /></PrivateRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
