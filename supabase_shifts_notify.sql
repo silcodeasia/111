@@ -11,7 +11,8 @@ begin
     url := 'https://mbdxqmteqlbmpuxivkji.supabase.co/functions/v1/notify-new-offer',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iZHhxbXRlcWxibXB1eGl2a2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODY3NjYsImV4cCI6MjA5NzM2Mjc2Nn0.AUSTJxqncUCll7e17M4EdNB_wPDJ10DIHOh161pVeqE'
+      'apikey', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iZHhxbXRlcWxibXB1eGl2a2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODY3NjYsImV4cCI6MjA5NzM2Mjc2Nn0.AUSTJxqncUCll7e17M4EdNB_wPDJ10DIHOh161pVeqE',
+      'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iZHhxbXRlcWxibXB1eGl2a2ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODY3NjYsImV4cCI6MjA5NzM2Mjc2Nn0.AUSTJxqncUCll7e17M4EdNB_wPDJ10DIHOh161pVeqE'
     ),
     body := jsonb_build_object(
       'store_id', NEW.store_id, 'position', NEW.position,
