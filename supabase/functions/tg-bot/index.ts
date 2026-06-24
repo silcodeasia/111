@@ -14,8 +14,9 @@ Deno.serve(async (req) => {
       const from = msg.from
       const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
       const name = [from.first_name, from.last_name].filter(Boolean).join(' ') || from.username || ('id' + from.id)
-      await db.from('workers').upsert({ tg_id: from.id, display_name: name }, { onConflict: 'tg_id' })
-      const { data: allowed } = await db.rpc('tg_is_allowed', { p_tg: from.id })
+      const uname = from.username ? String(from.username).toLowerCase() : null
+      await db.from('workers').upsert({ tg_id: from.id, display_name: name, username: uname }, { onConflict: 'tg_id' })
+      const { data: allowed } = await db.rpc('tg_is_allowed', { p_tg: from.id, p_username: uname })
       const payload = allowed === false
         ? { chat_id: msg.chat.id, text: 'Доступ к подработкам пока ограничен. Обратитесь к администратору сети.' }
         : {

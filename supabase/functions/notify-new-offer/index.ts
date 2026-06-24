@@ -17,15 +17,17 @@ Deno.serve(async (req) => {
 
     const { data: store } = await db.from('stores').select('name').eq('id', storeId).single()
     const { data: subs } = await db.from('worker_subscriptions')
-      .select('workers(tg_id)').eq('store_id', storeId)
-    let chatIds = (subs || []).map((s: any) => s.workers?.tg_id).filter(Boolean)
+      .select('workers(tg_id, username)').eq('store_id', storeId)
+    let people = (subs || []).map((s: any) => s.workers).filter((w: any) => w?.tg_id)
 
-    // белый список: если непустой — шлём только тем, кто в нём
-    const { data: allow } = await db.from('tg_allowlist').select('tg_id')
+    // белый список: если непустой — шлём только совпавшим по id или нику
+    const { data: allow } = await db.from('tg_allowlist').select('tg_id, username')
     if (allow && allow.length) {
-      const set = new Set(allow.map((a: any) => a.tg_id))
-      chatIds = chatIds.filter((c: number) => set.has(c))
+      const ids = new Set(allow.map((a: any) => a.tg_id).filter(Boolean))
+      const names = new Set(allow.map((a: any) => a.username).filter(Boolean))
+      people = people.filter((w: any) => ids.has(w.tg_id) || (w.username && names.has(w.username)))
     }
+    const chatIds = people.map((w: any) => w.tg_id)
 
     const pay = rec.pay != null ? `${Number(rec.pay).toLocaleString('ru-RU')} ₸/смена` : (rec.pay_note || 'по ставке')
     const date = rec.shift_date ? String(rec.shift_date).split('-').reverse().join('.') : ''
