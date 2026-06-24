@@ -38,6 +38,10 @@ Deno.serve(async (req) => {
     const tgUser = await validateInitData(body.initData, botToken)
     if (!tgUser) return json({ error: 'bad initData' }, 401)
 
+    // белый список: если в нём есть записи — пускаем только их
+    const { data: allowed } = await db.rpc('tg_is_allowed', { p_tg: tgUser.id })
+    if (allowed === false) return json({ error: 'not_allowed' }, 403)
+
     const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || ('id' + tgUser.id)
     const { data: w, error: wErr } = await db.from('workers')
       .upsert({ tg_id: tgUser.id, display_name: name }, { onConflict: 'tg_id' }).select('id').single()

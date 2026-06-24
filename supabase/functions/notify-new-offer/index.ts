@@ -18,7 +18,14 @@ Deno.serve(async (req) => {
     const { data: store } = await db.from('stores').select('name').eq('id', storeId).single()
     const { data: subs } = await db.from('worker_subscriptions')
       .select('workers(tg_id)').eq('store_id', storeId)
-    const chatIds = (subs || []).map((s: any) => s.workers?.tg_id).filter(Boolean)
+    let chatIds = (subs || []).map((s: any) => s.workers?.tg_id).filter(Boolean)
+
+    // белый список: если непустой — шлём только тем, кто в нём
+    const { data: allow } = await db.from('tg_allowlist').select('tg_id')
+    if (allow && allow.length) {
+      const set = new Set(allow.map((a: any) => a.tg_id))
+      chatIds = chatIds.filter((c: number) => set.has(c))
+    }
 
     const pay = rec.pay != null ? `${Number(rec.pay).toLocaleString('ru-RU')} ₸/смена` : (rec.pay_note || 'по ставке')
     const date = rec.shift_date ? String(rec.shift_date).split('-').reverse().join('.') : ''

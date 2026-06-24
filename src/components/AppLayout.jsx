@@ -11,6 +11,7 @@ import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined'
 import ListAltOutlinedIcon from '@mui/icons-material/ListAltOutlined'
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined'
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined'
 import LogoutIcon from '@mui/icons-material/Logout'
 import CircleIcon from '@mui/icons-material/Circle'
 import PushPinIcon from '@mui/icons-material/PushPin'
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { label: 'Подработка (тестовый режим)', icon: EventAvailableOutlinedIcon, path: '/shifts', permission: 'canViewShifts' },
   { label: 'Рекрутеры', icon: BadgeOutlinedIcon, path: '/hr', permission: 'canManageHr' },
   { label: 'Пользователи', icon: PeopleOutlineIcon, path: '/users', permission: 'canViewUsers' },
+  { label: 'Белый список (TG)', icon: VerifiedUserOutlinedIcon, path: '/allowlist', permission: 'canManageAllowlist' },
 ]
 
 function NavItem({ item, expanded }) {

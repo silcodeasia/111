@@ -34,6 +34,7 @@ const NONE = {
   canManageHr: false,        // раздел «Рекрутеры» (закрепление магазинов)
   canManageStaffing: false,  // раздел «Штатное расписание» + загрузка отчёта
   canViewShifts: false,      // раздел «Подработка (тестовый режим)»
+  canManageAllowlist: false, // раздел «Белый список (Telegram)»
 }
 
 /** Что умеет каждая роль */
@@ -41,7 +42,7 @@ export const PERMISSIONS = {
   [ROLES.ADMIN]: {
     canCreate: true, canEdit: true, canDelete: true, canManageUsers: true, canViewUsers: true, canViewAdminFields: true,
     canViewStores: true, canEditVacancies: true, canViewPlan: true, canViewRegion: true, canManageHr: true,
-    canManageStaffing: true, canViewShifts: true,
+    canManageStaffing: true, canViewShifts: true, canManageAllowlist: true,
   },
   [ROLES.EDITOR]: { ...NONE, canCreate: true, canEdit: true },
   [ROLES.VIEWER]: { ...NONE },
